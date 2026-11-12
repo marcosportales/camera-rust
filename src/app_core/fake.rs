@@ -1,4 +1,6 @@
-use super::backend::{Camera, CameraBackend, CameraError};
+use std::path::{Path, PathBuf};
+
+use super::backend::{Camera, CameraBackend, CameraError, PhotoError};
 use super::resolution::Resolution;
 
 /// Scriptable stand-in for the real camera.
@@ -6,6 +8,9 @@ pub struct FakeCamera {
     detection: Result<Camera, CameraError>,
     /// Resolutions the Viewfinder was started at, in order.
     pub started_at: Vec<Resolution>,
+    photo: Result<PathBuf, PhotoError>,
+    /// Folders Photos were requested for, in order.
+    pub photo_folders: Vec<PathBuf>,
 }
 
 impl FakeCamera {
@@ -22,11 +27,25 @@ impl FakeCamera {
         Self::scripted(Err(error))
     }
 
+    /// Script every Photo to be saved at `path`.
+    pub fn saving_photo_as(mut self, path: &Path) -> Self {
+        self.photo = Ok(path.to_path_buf());
+        self
+    }
+
+    /// Script every Photo to fail.
+    pub fn failing_photo(mut self) -> Self {
+        self.photo = Err(PhotoError);
+        self
+    }
+
     /// Build a fake that answers detection with the scripted result.
     fn scripted(detection: Result<Camera, CameraError>) -> Self {
         Self {
             detection,
             started_at: Vec::new(),
+            photo: Ok(PathBuf::from("photo.jpg")),
+            photo_folders: Vec::new(),
         }
     }
 }
@@ -42,6 +61,12 @@ impl CameraBackend for FakeCamera {
         self.detection.as_ref().map_err(|error| *error)?;
         self.started_at.push(resolution);
         Ok(())
+    }
+
+    /// Record the folder and return the scripted Photo result.
+    fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError> {
+        self.photo_folders.push(folder.to_path_buf());
+        self.photo.clone()
     }
 }
 

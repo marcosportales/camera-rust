@@ -1,4 +1,6 @@
-use super::backend::{Camera, CameraError};
+use std::path::{Path, PathBuf};
+
+use super::backend::{Camera, CameraBackend, CameraError, PhotoError};
 use super::resolution::{Resolution, default_resolution};
 
 /// Whether the next Shutter press produces a Photo or a Video.
@@ -43,6 +45,15 @@ pub enum Event {
     SetMode(Mode),
     CycleTimer,
     ToggleMirror,
+    PhotoSaved(PathBuf),
+    PhotoFailed,
+}
+
+/// What became of the last Photo the user took.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PhotoOutcome {
+    Saved(PathBuf),
+    Failed,
 }
 
 impl From<Result<Camera, CameraError>> for Event {
@@ -55,6 +66,16 @@ impl From<Result<Camera, CameraError>> for Event {
     }
 }
 
+impl From<Result<PathBuf, PhotoError>> for Event {
+    /// Turn a backend Photo result into the matching event.
+    fn from(photo: Result<PathBuf, PhotoError>) -> Self {
+        match photo {
+            Ok(path) => Self::PhotoSaved(path),
+            Err(PhotoError) => Self::PhotoFailed,
+        }
+    }
+}
+
 /// Everything the UI shows, changed only through [`AppState::handle`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppState {
@@ -63,6 +84,7 @@ pub struct AppState {
     pub mirror: bool,
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
+    pub photo: Option<PhotoOutcome>,
 }
 
 impl AppState {
@@ -74,7 +96,13 @@ impl AppState {
             mirror: true,
             resolution: None,
             camera: CameraState::Detecting,
+            photo: None,
         }
+    }
+
+    /// Take a Photo into `folder` and record whether it was saved.
+    pub fn take_photo(&mut self, camera: &mut impl CameraBackend, folder: &Path) {
+        self.handle(camera.take_photo(folder).into());
     }
 
     /// Apply an event to the state.
@@ -88,6 +116,8 @@ impl AppState {
             Event::SetMode(mode) => self.mode = mode,
             Event::CycleTimer => self.timer = self.timer.next(),
             Event::ToggleMirror => self.mirror = !self.mirror,
+            Event::PhotoSaved(path) => self.photo = Some(PhotoOutcome::Saved(path)),
+            Event::PhotoFailed => self.photo = Some(PhotoOutcome::Failed),
         }
     }
 }
@@ -118,6 +148,7 @@ mod tests {
         assert!(state.mirror);
         assert_eq!(state.resolution, None);
         assert_eq!(state.camera, CameraState::Detecting);
+        assert_eq!(state.photo, None);
     }
 
     #[test]
@@ -183,5 +214,33 @@ mod tests {
         assert!(!state.mirror);
         state.handle(Event::ToggleMirror);
         assert!(state.mirror);
+    }
+
+    #[test]
+    fn a_saved_photo_is_recorded_with_its_path() {
+        let path = PathBuf::from("/pics/Camera/a.jpg");
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]).saving_photo_as(&path);
+        let mut state = AppState::new();
+        state.take_photo(&mut camera, Path::new("/pics/Camera"));
+        assert_eq!(state.photo, Some(PhotoOutcome::Saved(path)));
+        assert_eq!(camera.photo_folders, [PathBuf::from("/pics/Camera")]);
+    }
+
+    #[test]
+    fn a_failed_photo_is_recorded_as_failed() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]).failing_photo();
+        let mut state = AppState::new();
+        state.take_photo(&mut camera, Path::new("/pics/Camera"));
+        assert_eq!(state.photo, Some(PhotoOutcome::Failed));
+    }
+
+    #[test]
+    fn every_press_takes_a_photo() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let mut state = AppState::new();
+        for _ in 0..3 {
+            state.take_photo(&mut camera, Path::new("/pics/Camera"));
+        }
+        assert_eq!(camera.photo_folders.len(), 3);
     }
 }

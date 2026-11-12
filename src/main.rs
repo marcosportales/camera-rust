@@ -1,36 +1,22 @@
-// Consumed by later tickets (UI, GStreamer backend); only tests use it for now.
+// Mode, Timer and Mirror events are consumed by later tickets.
 #[allow(dead_code)]
 mod app_core;
 mod assets;
+mod camera_window;
+mod gst_camera;
 // Verbatim copy of the design tokens page; later tickets consume the constants.
 #[allow(dead_code)]
 #[rustfmt::skip]
 mod theme;
 
-use gpui::{
-    App, Application, Bounds, Context, Window, WindowBounds, WindowOptions, div, prelude::*, px,
-    rgba, size,
-};
+use gpui::{App, Application, Bounds, WindowBounds, WindowOptions, prelude::*, px, size};
 
 use assets::Assets;
-use theme::{color, font};
+use camera_window::CameraWindow;
 
 /// Default window size in logical px.
 const WINDOW_WIDTH: f32 = 960.0;
 const WINDOW_HEIGHT: f32 = 540.0;
-
-/// Root view: an empty Camera window filled with the app background.
-struct CameraWindow;
-
-impl Render for CameraWindow {
-    /// Draw the app background; the Viewfinder and controls arrive in later tickets.
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        div()
-            .size_full()
-            .bg(rgba(color::APP_BG))
-            .font_family(font::FAMILY)
-    }
-}
 
 /// Open the Camera window and quit when it closes.
 fn main() {
@@ -54,7 +40,7 @@ fn main() {
         let opened = cx.open_window(options, |window, cx| {
             // `WindowOptions::titlebar` is ignored on Wayland in GPUI 0.2.2, so set the title explicitly.
             window.set_window_title("Camera");
-            cx.new(|_| CameraWindow)
+            cx.new(|cx| CameraWindow::new(window, cx))
         });
         if let Err(error) = opened {
             eprintln!("Could not open the Camera window: {error:#}");

@@ -45,12 +45,20 @@ where
         Mode::Video => ("mode-video", "Video"),
     };
     let active = selected == target;
-    let was_active = previous == target;
-    let (from, to) = match (was_active, active) {
-        (false, true) => (SEGMENT_CLEAR, color::SELECTED),
-        (true, false) => (color::SELECTED, SEGMENT_CLEAR),
-        _ => (SEGMENT_CLEAR, SEGMENT_CLEAR),
+    // Fade only when this segment's state changed; otherwise hold the resting fill.
+    let resting = if active {
+        color::SELECTED
+    } else {
+        SEGMENT_CLEAR
     };
+    let from = if previous == selected {
+        resting
+    } else if active {
+        SEGMENT_CLEAR
+    } else {
+        color::SELECTED
+    };
+    let to = resting;
     let button: Stateful<Div> = div()
         .id(id)
         .h(px(size::SEGMENT))

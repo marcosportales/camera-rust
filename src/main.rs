@@ -1,3 +1,6 @@
+// Consumed by later tickets (UI, GStreamer backend); only tests use it for now.
+#[allow(dead_code)]
+mod app_core;
 mod assets;
 // Verbatim copy of the design tokens page; later tickets consume the constants.
 #[allow(dead_code)]

@@ -1,8 +1,8 @@
 # GPUI agent skills and llms.txt: findings
 
-Status: needs-info
+Status: resolved
 
-Research done on 2026-11-12 during the to-tickets session. The decision is **open** and is for a later session: which of these (if any) to install for the agents that implement `camera-app` tickets. Nothing has been installed.
+Research started on 2026-11-12 during the to-tickets session; continued the same day (see "Second pass"). Decision: **option 1, install nothing.** Links to the matching GPUI docs and examples were added as a `GPUI references` line to the tickets that need them.
 
 ## Question
 
@@ -16,6 +16,19 @@ Does GPUI ship skills or an `llms.txt` that teach agents to use it correctly? If
 - **`longbridge/gpui-component` ships two skills today:** `gpui-kit` and `gpui-kit-design-guides`. They target the `gpui-kit` crate, a component framework layered on GPUI, with its own `llms.txt` at `https://gpui-kit.com/llms.txt`. Third-party indexes still list older skills from that repo (`gpui-element`, `gpui-context`, `gpui-global`, `new-component`); they are no longer in the repo and were not verified.
 - `gpui` on crates.io is at 0.2.2 (published 2026-10-30), pre-1.0.
 
+## Second pass (2026-11-12)
+
+- **Older `gpui-component` skills confirmed gone.** `skills/` in `longbridge/gpui-component` contains only `gpui-kit` and `gpui-kit-design-guides`. The third-party listings of `gpui-element`, `gpui-context`, `gpui-global`, `new-component` are stale.
+- **`gpui-kit/references/`** holds `coding-guides.md`, `conventions.md`, `recipes.md`, `usage.md` and a `gpui/` folder. Not read in depth; still the only candidate for option 3.
+- **The topics the tickets need with no skill are covered by runnable examples** in `crates/gpui/examples/` of `zed-industries/zed`:
+  - Actions and key bindings: `input.rs` (`actions!`, `cx.bind_keys([KeyBinding::new(...)])`).
+  - Opacity animation: `opacity.rs` (`.opacity(..)`), `animation.rs` (`with_animation`, `Animation::new`, spring animations, animated `svg()`).
+  - SVG assets: `svg/svg.rs` and `animation.rs`.
+  - Drawing images: `image/`, `image_loading.rs` (custom `ImageAssetLoader`, `RenderImage`, `img(...)`), `gif_viewer.rs`. For a live decoded frame, `Window::paint_image` exists in `window.rs`; no example feeds frames from a camera, so the frame-to-`RenderImage` path needs a spike in the ticket that implements the viewfinder.
+  - Focus and key context: `focus_visible.rs`, `tab_stop.rs`, plus `docs/key_dispatch.md`.
+  - Async: not checked per example. Spawning from entities is covered by `docs/contexts.md`.
+- **Gap that nothing covers:** GStreamer-to-GPUI frame handoff. No skill, doc or example found. It belongs to a spike ticket, not to an installed skill.
+
 ## Fit with this project
 
 - The spec uses plain GPUI with the tokens in `docs/design/Camera-UI`. Installing `gpui-kit` would steer agents toward its components and theme, against ADR 0001 and the design. The Design Guides skill would add a second source of design truth next to our own.
@@ -28,7 +41,7 @@ Does GPUI ship skills or an `llms.txt` that teach agents to use it correctly? If
 2. **Install `gpui-test` only**, if the project decides to test GPUI entities.
 3. **Read, not install**, `skills/gpui-kit/references/coding-guides.md` (sections on contexts, state ownership, events/focus, async) as a one-off reference. Some of it is `gpui-kit`-specific.
 
-Recommended: option 1, revisit option 2 when a ticket needs a GPUI-level test.
+Recommended: option 1, now with concrete links. In each ticket, point to the matching example file above instead of installing anything. Revisit option 2 when a ticket needs a GPUI-level test.
 
 ## Sources
 

@@ -197,6 +197,18 @@ mod tests {
     }
 
     #[test]
+    fn selecting_the_active_mode_changes_nothing() {
+        let mut state = AppState::new();
+        let before = state.clone();
+        state.handle(Event::SetMode(Mode::Photo));
+        assert_eq!(state, before);
+        state.handle(Event::SetMode(Mode::Video));
+        let before = state.clone();
+        state.handle(Event::SetMode(Mode::Video));
+        assert_eq!(state, before);
+    }
+
+    #[test]
     fn timer_cycles_off_3s_10s_and_wraps_to_off() {
         let mut state = AppState::new();
         let mut seen = Vec::new();

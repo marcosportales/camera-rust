@@ -6,27 +6,26 @@ use std::time::Duration;
 use futures::StreamExt;
 use futures::channel::mpsc::{self, Receiver};
 use gpui::{
-    AsyncWindowContext, Context, FocusHandle, FontWeight, IntoElement, MouseButton, ObjectFit,
-    RenderImage, SharedString, WeakEntity, Window, actions, div, img, linear_color_stop,
-    linear_gradient, prelude::*, px, rgba, svg,
+    AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton, RenderImage, SharedString,
+    WeakEntity, Window, actions, div, prelude::*, px, rgba,
 };
 
 use crate::app_core::backend::CameraBackend;
-use crate::app_core::state::{AppState, CameraState, Event, PhotoOutcome};
+use crate::app_core::state::{AppState, CameraState, Event, Mode, PhotoOutcome};
+use crate::feedback::{CaptureFeedback, ModeTransition};
 use crate::gst_camera::{Frame, GstCamera};
+use crate::mode_pill;
+use crate::overlays::{camera_label, scrim_bottom, scrim_top, viewfinder_image};
 use crate::photo_store::photos_folder;
-use crate::photo_ui::{self, FLASH_DURATION, FillTransition, ShutterFill, TOAST_DURATION};
+use crate::photo_ui::{
+    self, FLASH_DURATION, FillTransition, ShutterFill, ShutterLook, TOAST_DURATION,
+};
 use crate::theme::{color, font, size, space};
 
-actions!(camera, [TakePhoto]);
+actions!(camera, [TakePhoto, SelectPhoto, SelectVideo]);
 
 /// Key context of the root view, used to scope key bindings.
 pub const KEY_CONTEXT: &str = "Camera";
-
-/// Height of the `scrim_top` gradient behind the top row, in logical px.
-const SCRIM_TOP_HEIGHT: f32 = 96.0;
-/// Height of the `scrim_bottom` gradient behind the bottom controls, in logical px.
-const SCRIM_BOTTOM_HEIGHT: f32 = 200.0;
 
 /// Root view: owns the app state, the camera and the latest Viewfinder frame.
 pub struct CameraWindow {
@@ -34,11 +33,8 @@ pub struct CameraWindow {
     /// Owned so its pipeline keeps running; dropping it stops the camera.
     camera: GstCamera,
     focus: FocusHandle,
-    /// Id of the flash being played, if any. Ids grow with every Photo, so each one restarts the animation.
-    flash: Option<u64>,
-    /// Id of the toast being shown, if any; its text comes from `state.photo`.
-    toast: Option<u64>,
-    photos_taken: u64,
+    feedback: CaptureFeedback,
+    mode_transition: ModeTransition,
     shutter_hovered: bool,
     shutter_pressed: bool,
     shutter_fill: FillTransition,
@@ -66,9 +62,8 @@ impl CameraWindow {
             state,
             camera,
             focus,
-            flash: None,
-            toast: None,
-            photos_taken: 0,
+            feedback: CaptureFeedback::default(),
+            mode_transition: ModeTransition::new(),
             shutter_hovered: false,
             shutter_pressed: false,
             shutter_fill: FillTransition::new(),
@@ -91,30 +86,38 @@ impl CameraWindow {
 
     /// Take a Photo; once it is written, flash and toast the outcome. A failure only toasts.
     fn take_photo(&mut self, cx: &mut Context<Self>) {
-        if !matches!(self.state.camera, CameraState::Ready(_)) {
+        // Recording arrives in a later ticket; in Video Mode the Shutter does nothing.
+        if !matches!(self.state.camera, CameraState::Ready(_)) || self.state.mode != Mode::Photo {
             return;
         }
         self.state.take_photo(&mut self.camera, &photos_folder());
-        self.photos_taken += 1;
-        let id = self.photos_taken;
-        if matches!(self.state.photo, Some(PhotoOutcome::Saved(_))) {
-            self.flash = Some(id);
+        let saved = matches!(self.state.photo, Some(PhotoOutcome::Saved(_)));
+        let id = self.feedback.begin(saved);
+        if saved {
             after(cx, FLASH_DURATION, move |view, cx| view.end_flash(id, cx));
         }
-        self.toast = Some(id);
         after(cx, TOAST_DURATION, move |view, cx| {
-            if view.toast == Some(id) {
-                view.toast = None;
+            if view.feedback.end_toast(id) {
                 cx.notify();
             }
         });
         self.update_shutter_fill(cx);
     }
 
+    /// Switch to `mode`; does nothing if it is already active or the camera is not ready.
+    fn select_mode(&mut self, mode: Mode, cx: &mut Context<Self>) {
+        if !matches!(self.state.camera, CameraState::Ready(_)) || self.state.mode == mode {
+            return;
+        }
+        self.mode_transition.switched_from(self.state.mode);
+        self.state.handle(Event::SetMode(mode));
+        self.update_shutter_fill(cx);
+        cx.notify();
+    }
+
     /// Remove flash `id`, unless a newer Photo has replaced it.
     fn end_flash(&mut self, id: u64, cx: &mut Context<Self>) {
-        if self.flash == Some(id) {
-            self.flash = None;
+        if self.feedback.end_flash(id) {
             self.update_shutter_fill(cx);
         }
     }
@@ -125,16 +128,17 @@ impl CameraWindow {
         self.update_shutter_fill(cx);
     }
 
-    /// Fade the Shutter fill to the look that matches the flash, press and hover state.
+    /// Fade the Shutter fill to the look that matches the Mode and the flash, press and hover state.
     fn update_shutter_fill(&mut self, cx: &mut Context<Self>) {
-        let target = if self.flash.is_some() || self.shutter_pressed {
+        let fill = if self.feedback.flash.is_some() || self.shutter_pressed {
             ShutterFill::Pressed
         } else if self.shutter_hovered {
             ShutterFill::Hover
         } else {
             ShutterFill::Rest
         };
-        if self.shutter_fill.retarget(target) {
+        let mode = self.state.mode;
+        if self.shutter_fill.retarget(ShutterLook { mode, fill }) {
             cx.notify();
         }
     }
@@ -193,6 +197,12 @@ impl Render for CameraWindow {
             .key_context(KEY_CONTEXT)
             .track_focus(&self.focus)
             .on_action(cx.listener(|this, _: &TakePhoto, _, cx| this.take_photo(cx)))
+            .on_action(
+                cx.listener(|this, _: &SelectPhoto, _, cx| this.select_mode(Mode::Photo, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &SelectVideo, _, cx| this.select_mode(Mode::Video, cx)),
+            )
             .size_full()
             .relative()
             .bg(rgba(color::APP_BG))
@@ -203,13 +213,15 @@ impl Render for CameraWindow {
         root.bg(rgba(color::LETTERBOX))
             .children(self.frame.clone().map(viewfinder_image))
             // The flash sits under the scrims and controls.
-            .children(self.flash.map(photo_ui::flash))
+            .children(self.feedback.flash.map(photo_ui::flash))
             .child(scrim_top())
             .child(scrim_bottom())
             .child(camera_label(SharedString::from(camera.name.clone())))
+            .child(self.mode_pill(cx))
             .child(self.shutter(cx))
             .children(
-                self.toast
+                self.feedback
+                    .toast
                     .zip(self.state.photo.as_ref())
                     .map(|(id, outcome)| photo_ui::toast(id, outcome)),
             )
@@ -217,6 +229,33 @@ impl Render for CameraWindow {
 }
 
 impl CameraWindow {
+    /// The Mode pill centered above the Shutter, `space.16` above its top edge.
+    fn mode_pill(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        div()
+            .absolute()
+            .bottom(px(space::S24 + size::SHUTTER + space::S16))
+            .left_0()
+            .right_0()
+            .flex()
+            .justify_center()
+            .child(
+                mode_pill::track()
+                    .child(self.mode_segment(Mode::Photo, cx))
+                    .child(self.mode_segment(Mode::Video, cx)),
+            )
+    }
+
+    /// The pill segment that selects `target` when clicked.
+    fn mode_segment(&self, target: Mode, cx: &mut Context<Self>) -> impl IntoElement {
+        mode_pill::segment(
+            target,
+            self.state.mode,
+            self.mode_transition.previous,
+            self.mode_transition.switches,
+            cx.listener(move |this, _, _, cx| this.select_mode(target, cx)),
+        )
+    }
+
     /// The Shutter at the bottom center; clicking it takes a Photo.
     fn shutter(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let button = photo_ui::shutter(self.shutter_fill)
@@ -249,58 +288,4 @@ impl CameraWindow {
             .justify_center()
             .child(button)
     }
-}
-
-/// The latest frame, as large as fits the window without distortion, centered.
-fn viewfinder_image(frame: Arc<RenderImage>) -> impl IntoElement {
-    img(frame).size_full().object_fit(ObjectFit::Contain)
-}
-
-/// Gradient from `color::SCRIM_TOP` at the top edge to transparent, so the top row stays legible.
-fn scrim_top() -> impl IntoElement {
-    scrim(color::SCRIM_TOP, SCRIM_TOP_HEIGHT, 180.0).top_0()
-}
-
-/// Gradient from `color::SCRIM_BOTTOM` at the bottom edge to transparent, so the bottom controls stay legible.
-fn scrim_bottom() -> impl IntoElement {
-    scrim(color::SCRIM_BOTTOM, SCRIM_BOTTOM_HEIGHT, 0.0).bottom_0()
-}
-
-/// A full-width band `height` tall fading from `edge_color` to transparent, along `angle` degrees.
-fn scrim(edge_color: u32, height: f32, angle: f32) -> gpui::Div {
-    // Same color with the alpha byte (lowest, in 0xRRGGBBAA) cleared, so only opacity fades.
-    let transparent = edge_color & 0xFFFF_FF00;
-    div()
-        .absolute()
-        .left_0()
-        .right_0()
-        .h(px(height))
-        .bg(linear_gradient(
-            angle,
-            linear_color_stop(rgba(edge_color), 0.0),
-            linear_color_stop(rgba(transparent), 1.0),
-        ))
-}
-
-/// The `camera` icon and the camera name, top left.
-fn camera_label(name: SharedString) -> impl IntoElement {
-    let text_color = rgba(color::TEXT_SECONDARY);
-    div()
-        .absolute()
-        .top(px(space::S16))
-        .left(px(space::S16))
-        .h(px(size::CONTROL))
-        .flex()
-        .items_center()
-        .gap(px(space::S8))
-        .text_size(px(font::SMALL))
-        .font_weight(FontWeight::MEDIUM)
-        .text_color(text_color)
-        .child(
-            svg()
-                .path("icons/camera.svg")
-                .size(px(size::ICON_SM))
-                .text_color(text_color),
-        )
-        .child(name)
 }

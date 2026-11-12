@@ -14,7 +14,7 @@ impl Resolution {
     }
 
     /// Total pixel count, used to rank Resolutions.
-    fn pixels(self) -> u64 {
+    pub fn pixels(self) -> u64 {
         u64::from(self.width) * u64::from(self.height)
     }
 }

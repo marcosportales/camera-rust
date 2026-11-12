@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera — Component sheet</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+body{margin:0;background:#0B0B0C}
+button{font-family:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<div style="width: 1440px; min-height: 1300px; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; gap: 24px; background: #0B0B0C; font-family: Inter, system-ui, sans-serif; color: rgba(255,255,255,0.96)">
+
+  <header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em">Components</h1>
+      <p style="margin: 0; font-size: 13px; line-height: 20px; color: rgba(255,255,255,0.72)">Every control sits on the live image. Shown here on a stand-in frame so the translucency reads correctly.</p>
+    </div>
+    <p style="margin: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">GPUI-safe: solid / alpha fills · rounded rects · linear gradients · box shadows · SVG icons</p>
+  </header>
+
+  <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Shutter</h2>
+      <span style="font-size: 12px; color: rgba(255,255,255,0.50)">72 px · 4 px ring · 4 px gap · 56 px fill. Only the fill changes between states (color fade, 150 ms).</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 48px; padding: 28px 28px 20px; border-radius: 12px; background: linear-gradient(170deg, #4b4642, #2a2724)">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Take photo" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 56px; height: 56px; border-radius: 999px; background: #FFFFFF"></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">photo</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Take photo, hovered" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 56px; height: 56px; border-radius: 999px; background: rgba(255,255,255,0.86)"></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">photo · hover</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Take photo, pressed" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 56px; height: 56px; border-radius: 999px; background: rgba(255,255,255,0.70)"></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">photo · pressed</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Start recording" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 56px; height: 56px; border-radius: 999px; background: #FF453A"></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">video</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Start recording, hovered" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 56px; height: 56px; border-radius: 999px; background: #FF5F55"></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">video · hover</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Stop recording" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 6px; background: #FF453A"></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">recording · stop</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Cancel countdown" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 56px; height: 56px; border-radius: 999px; background: #FFFFFF; color: #111113; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"></path></svg></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">countdown · cancel</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Shutter, disabled" disabled style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.32); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: default"><span style="width: 56px; height: 56px; border-radius: 999px; background: rgba(255,255,255,0.32)"></span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">disabled</span>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+    <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Mode pill</h2>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.50)">36 px track · 2 px inset · 32 px segments</span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 40px; padding: 28px 28px 20px; border-radius: 12px; background: linear-gradient(170deg, #4b4642, #2a2724)">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <div aria-label="Mode" style="display: flex; padding: 2px; gap: 2px; border-radius: 999px; background: rgba(20,20,22,0.56); box-shadow: 0 2px 8px rgba(0,0,0,0.24)">
+            <button aria-pressed="true" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.92); color: #111113; font-size: 13px; font-weight: 600">Photo</button>
+            <button aria-pressed="false" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 500">Video</button>
+          </div>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">photo active</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <div aria-label="Mode" style="display: flex; padding: 2px; gap: 2px; border-radius: 999px; background: rgba(20,20,22,0.56); box-shadow: 0 2px 8px rgba(0,0,0,0.24)">
+            <button aria-pressed="false" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 500">Photo</button>
+            <button aria-pressed="true" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.92); color: #111113; font-size: 13px; font-weight: 600">Video</button>
+          </div>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">video active</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <div aria-label="Mode" style="display: flex; padding: 2px; gap: 2px; border-radius: 999px; background: rgba(20,20,22,0.56); box-shadow: 0 2px 8px rgba(0,0,0,0.24)">
+            <button aria-pressed="true" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.92); color: #111113; font-size: 13px; font-weight: 600">Photo</button>
+            <button aria-pressed="false" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.96); font-size: 13px; font-weight: 500">Video</button>
+          </div>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">inactive · hover</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Last-capture thumbnail</h2>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.50)">48 px · radius 10 · click opens the folder</span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 40px; padding: 28px 28px 20px; border-radius: 12px; background: linear-gradient(170deg, #4b4642, #2a2724)">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <button aria-label="Open captures folder (empty)" style="width: 48px; height: 48px; padding: 0; box-sizing: border-box; border: 1.5px dashed rgba(255,255,255,0.24); border-radius: 10px; background: rgba(20,20,22,0.56); color: rgba(255,255,255,0.50); display: flex; align-items: center; justify-content: center">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"></path></svg>
+          </button>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">empty</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <button aria-label="Open captures folder" style="width: 48px; height: 48px; padding: 0; box-sizing: border-box; border: 1.5px solid rgba(255,255,255,0.24); border-radius: 10px; overflow: hidden; position: relative; background: linear-gradient(170deg, #5a534d, #2a2724)">
+            <span aria-hidden="true" style="position: absolute; left: 13px; bottom: 0; width: 20px; height: 12px; border-radius: 10px 10px 0 0; background: #3f4b57"></span>
+            <span aria-hidden="true" style="position: absolute; left: 17px; top: 11px; width: 12px; height: 15px; border-radius: 6px; background: #9a7f6d"></span>
+          </button>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">photo</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <button aria-label="Open captures folder (last capture: video)" style="width: 48px; height: 48px; padding: 0; box-sizing: border-box; border: 1.5px solid rgba(255,255,255,0.24); border-radius: 10px; overflow: hidden; position: relative; background: linear-gradient(170deg, #4f5a55, #232826)">
+            <span aria-hidden="true" style="position: absolute; left: 9px; bottom: 0; width: 22px; height: 13px; border-radius: 11px 11px 0 0; background: #5a4a42"></span>
+            <span aria-hidden="true" style="position: absolute; left: 14px; top: 12px; width: 12px; height: 15px; border-radius: 6px; background: #a68a76"></span>
+            <span aria-hidden="true" style="position: absolute; right: 3px; bottom: 3px; width: 18px; height: 18px; border-radius: 999px; background: rgba(0,0,0,0.60); display: flex; align-items: center; justify-content: center; color: #FFFFFF"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"></path></svg></span>
+          </button>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">video</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <button aria-label="Open captures folder, hovered" style="width: 48px; height: 48px; padding: 0; box-sizing: border-box; border: 1.5px solid rgba(255,255,255,0.48); border-radius: 10px; overflow: hidden; position: relative; background: linear-gradient(170deg, #5a534d, #2a2724)">
+            <span aria-hidden="true" style="position: absolute; left: 13px; bottom: 0; width: 20px; height: 12px; border-radius: 10px 10px 0 0; background: #3f4b57"></span>
+            <span aria-hidden="true" style="position: absolute; left: 17px; top: 11px; width: 12px; height: 15px; border-radius: 6px; background: #9a7f6d"></span>
+          </button>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">hover</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+          <button aria-label="Open captures folder, just saved" style="width: 48px; height: 48px; padding: 0; box-sizing: border-box; border: 2px solid rgba(255,255,255,0.92); border-radius: 10px; overflow: hidden; position: relative; background: linear-gradient(170deg, #4b4642, #221f1d)">
+            <span aria-hidden="true" style="position: absolute; left: 11px; bottom: 0; width: 22px; height: 13px; border-radius: 11px 11px 0 0; background: #3f4b57"></span>
+            <span aria-hidden="true" style="position: absolute; left: 16px; top: 10px; width: 12px; height: 15px; border-radius: 6px; background: #a08573"></span>
+          </button>
+          <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">just saved</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">Icon buttons</h2>
+      <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Top row: 40 px, radius 10. Mirror: 48 px circle. “On” = white 22 %, never accent.</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 40px; padding: 28px 28px 20px; border-radius: 12px; background: linear-gradient(170deg, #4b4642, #2a2724)">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Timer: off" style="width: 40px; height: 40px; padding: 0; border: 0; border-radius: 10px; background: rgba(20,20,22,0.56); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"></circle><path d="M12 10v3.5l2.5 2"></path><path d="M9.5 3h5"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">default</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Timer: off, hovered" style="width: 40px; height: 40px; padding: 0; border: 0; border-radius: 10px; background: rgba(36,36,40,0.72); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"></circle><path d="M12 10v3.5l2.5 2"></path><path d="M9.5 3h5"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">hover</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Timer: 3 seconds" style="height: 40px; padding: 0 12px 0 10px; border: 0; border-radius: 10px; background: rgba(255,255,255,0.22); color: rgba(255,255,255,0.96); display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"></circle><path d="M12 10v3.5l2.5 2"></path><path d="M9.5 3h5"></path></svg><span>3s</span></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">timer set</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Resolution: 1080p" style="height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(20,20,22,0.56); color: rgba(255,255,255,0.96); display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><span>1080p</span><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.72"><path d="M6 9l6 6 6-6"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">label button</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Resolution menu, open" style="height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,255,255,0.22); color: rgba(255,255,255,0.96); display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><span>1080p</span><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">menu open</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Mirror off" aria-pressed="false" style="width: 48px; height: 48px; padding: 0; border: 0; border-radius: 999px; background: rgba(20,20,22,0.56); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 9v2M12 15v2M12 19v2"></path><path d="M9 7L3 17h6z"></path><path d="M15 7l6 10h-6z"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">mirror · off</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Mirror on" aria-pressed="true" style="width: 48px; height: 48px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,0.22); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 9v2M12 15v2M12 19v2"></path><path d="M9 7L3 17h6z"></path><path d="M15 7l6 10h-6z"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">mirror · on</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Timer, keyboard focus" style="width: 40px; height: 40px; padding: 0; border: 0; border-radius: 10px; background: rgba(20,20,22,0.56); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: center; outline: 2px solid rgba(255,255,255,0.90); outline-offset: 2px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"></circle><path d="M12 10v3.5l2.5 2"></path><path d="M9.5 3h5"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">focus</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+        <button aria-label="Timer, disabled" disabled style="width: 40px; height: 40px; padding: 0; border: 0; border-radius: 10px; background: rgba(20,20,22,0.56); color: rgba(255,255,255,0.32); display: flex; align-items: center; justify-content: center; cursor: default"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"></circle><path d="M12 10v3.5l2.5 2"></path><path d="M9.5 3h5"></path></svg></button>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">disabled</span>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+    <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Menu</h2>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.50)">radius 14 · 4 px inset · 32 px rows</span>
+      </div>
+      <div style="display: flex; justify-content: center; padding: 24px; border-radius: 12px; background: linear-gradient(170deg, #4b4642, #2a2724)">
+        <div role="menu" aria-label="Timer" style="width: 184px; box-sizing: border-box; padding: 4px; display: flex; flex-direction: column; border-radius: 14px; background: rgba(24,24,27,0.96); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 8px 24px rgba(0,0,0,0.40)">
+          <div style="padding: 8px 12px 4px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.50)">Timer</div>
+          <button role="menuitemradio" aria-checked="false" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500"><span>Off</span></button>
+          <button role="menuitemradio" aria-checked="true" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600"><span>3 seconds</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></button>
+          <button role="menuitemradio" aria-checked="false" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500"><span>10 seconds</span><span style="font-size: 11px; color: rgba(255,255,255,0.50)">hover</span></button>
+          <div aria-hidden="true" style="height: 1px; margin: 4px 0; background: rgba(255,255,255,0.08)"></div>
+          <div style="height: 32px; padding: 0 8px 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.50)"><span>Cycle timer</span><span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">T</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Tooltip &amp; keycaps</h2>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.50)">28 px · radius 8</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; border-radius: 12px; background: linear-gradient(170deg, #4b4642, #2a2724); flex-grow: 1">
+        <div role="tooltip" style="height: 28px; box-sizing: border-box; padding: 0 4px 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 8px; background: rgba(24,24,27,0.96); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 8px 24px rgba(0,0,0,0.40); font-size: 12px; font-weight: 500; white-space: nowrap"><span>Take photo</span><span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 6px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">Space</span></div>
+        <div role="tooltip" style="height: 28px; box-sizing: border-box; padding: 0 4px 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 8px; background: rgba(24,24,27,0.96); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 8px 24px rgba(0,0,0,0.40); font-size: 12px; font-weight: 500; white-space: nowrap"><span>Mirror</span><span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">M</span></div>
+        <div role="tooltip" style="height: 28px; box-sizing: border-box; padding: 0 12px; display: flex; align-items: center; border-radius: 8px; background: rgba(24,24,27,0.96); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 8px 24px rgba(0,0,0,0.40); font-size: 12px; font-weight: 500; white-space: nowrap">Open captures folder</div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding-top: 8px">
+          <span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 6px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">Space</span>
+          <span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">P</span>
+          <span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">V</span>
+          <span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">T</span>
+          <span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">M</span>
+          <span style="min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 6px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.72)">Esc</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 600">Status &amp; feedback</h2>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.50)">top-center slot</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; border-radius: 12px; background: linear-gradient(170deg, #4b4642, #2a2724); flex-grow: 1">
+        <div role="timer" style="height: 32px; box-sizing: border-box; padding: 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 999px; background: rgba(20,20,22,0.56); box-shadow: 0 2px 8px rgba(0,0,0,0.24)"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 999px; background: #FF453A"></span><span style="font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums">00:42</span></div>
+        <div role="status" style="height: 32px; box-sizing: border-box; padding: 0 12px 0 10px; display: flex; align-items: center; gap: 8px; border-radius: 999px; background: rgba(24,24,27,0.96); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 8px 24px rgba(0,0,0,0.40); font-size: 12px; font-weight: 500; white-space: nowrap"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Video saved</span><span style="color: rgba(255,255,255,0.50)">Videos/Camera</span></div>
+        <div style="display: flex; align-items: center; gap: 24px">
+          <span style="font-size: 72px; line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums">3</span>
+          <button style="height: 36px; padding: 0 18px 0 14px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.92); color: #111113; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"></path><path d="M20 4v5h-5"></path></svg><span>Retry</span></button>
+        </div>
+        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">rec timer · toast · numeral (144 px in app) · primary button</span>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

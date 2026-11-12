@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera — 7b · Resolution menu open</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+body{margin:0;background:#0B0B0C}
+button{font-family:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<div style="width: 960px; height: 540px; position: relative; overflow: hidden; background: #000000; font-family: Inter, system-ui, sans-serif; color: rgba(255,255,255,0.96)">
+
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(170deg, #4b4642 0%, #36322f 45%, #221f1d 100%)">
+    <div style="position: absolute; left: 56px; top: 40px; width: 220px; height: 300px; border-radius: 6px; background: linear-gradient(180deg, rgba(222,216,200,0.22), rgba(222,216,200,0.05))"></div>
+    <div style="position: absolute; right: 196px; top: 62px; width: 16px; height: 58px; border-radius: 2px; background: #5b4a3e"></div>
+    <div style="position: absolute; right: 176px; top: 70px; width: 18px; height: 50px; border-radius: 2px; background: #3d4a44"></div>
+    <div style="position: absolute; right: 160px; top: 58px; width: 14px; height: 62px; border-radius: 2px; background: #6a5f52"></div>
+    <div style="position: absolute; right: 70px; top: 120px; width: 190px; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.28)"></div>
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 70px; background: linear-gradient(180deg, #2a2622, #1b1917)"></div>
+    <div style="position: absolute; left: 455px; top: 290px; width: 50px; height: 90px; border-radius: 12px; background: #84695a"></div>
+    <div style="position: absolute; left: 330px; top: 370px; width: 300px; height: 170px; border-radius: 150px 150px 0 0; background: linear-gradient(180deg, #3f4b57, #2c353e)"></div>
+    <div style="position: absolute; left: 418px; top: 150px; width: 124px; height: 150px; border-radius: 62px 62px 56px 56px; background: linear-gradient(180deg, #a08573, #7f6656)"></div>
+    <div style="position: absolute; left: 412px; top: 140px; width: 136px; height: 64px; border-radius: 68px 68px 22px 22px; background: #2b2320"></div>
+  </div>
+
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 96px; background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0))"></div>
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 200px; background: linear-gradient(0deg, rgba(0,0,0,0.55), rgba(0,0,0,0))"></div>
+
+  <div style="position: absolute; left: 16px; top: 16px; height: 40px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.72)">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h3l1.5-2h7l1.5 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+    <span>Integrated Camera</span>
+  </div>
+
+  <div style="position: absolute; right: 16px; top: 16px; display: flex; gap: 8px">
+    <button aria-label="Timer: off (T)" style="width: 40px; height: 40px; padding: 0; border: 0; border-radius: 10px; background: rgba(20,20,22,0.56); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.24)">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"></circle><path d="M12 10v3.5l2.5 2"></path><path d="M9.5 3h5"></path></svg>
+    </button>
+    <div style="position: relative">
+      <button aria-label="Resolution: 1080p" aria-haspopup="menu" aria-expanded="true" style="height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,255,255,0.22); color: rgba(255,255,255,0.96); display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; box-shadow: 0 2px 8px rgba(0,0,0,0.24)">
+        <span>1080p</span>
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"></path></svg>
+      </button>
+      <div role="menu" aria-label="Resolution" style="position: absolute; top: 48px; right: 0; width: 232px; box-sizing: border-box; padding: 4px; display: flex; flex-direction: column; border-radius: 14px; background: rgba(24,24,27,0.96); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 8px 24px rgba(0,0,0,0.40)">
+        <div style="padding: 8px 12px 4px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.50)">Resolution</div>
+        <button role="menuitemradio" aria-checked="true" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; text-align: left">
+          <span style="display: flex; align-items: baseline; gap: 8px"><span>1080p</span><span style="font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.50); font-variant-numeric: tabular-nums">1920 × 1080</span></span>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </button>
+        <button role="menuitemradio" aria-checked="false" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500; text-align: left">
+          <span style="display: flex; align-items: baseline; gap: 8px"><span>720p</span><span style="font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.50); font-variant-numeric: tabular-nums">1280 × 720</span></span>
+        </button>
+        <button role="menuitemradio" aria-checked="false" style="height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500; text-align: left">
+          <span style="display: flex; align-items: baseline; gap: 8px"><span>480p</span><span style="font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.50); font-variant-numeric: tabular-nums">640 × 480 · 4:3</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px">
+    <div aria-label="Mode" style="display: flex; padding: 2px; gap: 2px; border-radius: 999px; background: rgba(20,20,22,0.56); box-shadow: 0 2px 8px rgba(0,0,0,0.24)">
+      <button aria-pressed="true" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.92); color: #111113; font-size: 13px; font-weight: 600">Photo</button>
+      <button aria-pressed="false" style="height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 500">Video</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 40px">
+      <button aria-label="Open captures folder" style="width: 48px; height: 48px; padding: 0; box-sizing: border-box; border: 1.5px solid rgba(255,255,255,0.24); border-radius: 10px; overflow: hidden; position: relative; background: linear-gradient(170deg, #5a534d, #2a2724)">
+        <span aria-hidden="true" style="position: absolute; left: 13px; bottom: 0; width: 20px; height: 12px; border-radius: 10px 10px 0 0; background: #3f4b57"></span>
+        <span aria-hidden="true" style="position: absolute; left: 17px; top: 11px; width: 12px; height: 15px; border-radius: 6px; background: #9a7f6d"></span>
+      </button>
+      <button aria-label="Take photo (Space)" style="width: 72px; height: 72px; padding: 0; box-sizing: border-box; border: 4px solid rgba(255,255,255,0.92); border-radius: 999px; background: transparent; display: flex; align-items: center; justify-content: center">
+        <span style="width: 56px; height: 56px; border-radius: 999px; background: #FFFFFF"></span>
+      </button>
+      <button aria-label="Mirror (M)" aria-pressed="true" style="width: 48px; height: 48px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,0.22); color: rgba(255,255,255,0.96); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.24)">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 9v2M12 15v2M12 19v2"></path><path d="M9 7L3 17h6z"></path><path d="M15 7l6 10h-6z"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

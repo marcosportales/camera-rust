@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera — Design tokens</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+body{margin:0;background:#0B0B0C}
+button{font-family:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<div style="width: 1440px; min-height: 3440px; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; gap: 24px; background: #0B0B0C; font-family: Inter, system-ui, sans-serif; color: rgba(255,255,255,0.96)">
+
+  <header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em">Design tokens</h1>
+      <p style="margin: 0; font-size: 13px; line-height: 20px; color: rgba(255,255,255,0.72)">Dark only. White and gray at set opacities over the image; red is reserved for video and recording. Hex values are 0xRRGGBBAA, ready for <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px">gpui::rgba()</span>.</p>
+    </div>
+    <p style="margin: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">Swatches sit on a black / mid-tone split so alpha reads honestly</p>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start">
+    <section style="display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+      <h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 600">Color · surfaces &amp; text</h2>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: #000000"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">letterbox</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Bars when stream and window aspect ratios differ</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">#000000</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x000000FF</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: #0B0B0C"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">app_bg</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Error screen; window before the first frame</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">#0B0B0C</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x0B0B0CFF</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(20,20,22,0.56)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">control</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Icon buttons, mode-pill track, rec timer</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">rgba(20,20,22,.56)</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x1414168F</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(36,36,40,0.72)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">control_hover</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Hovered control</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">rgba(36,36,40,.72)</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x242428B8</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.22)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">control_on</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Toggle on (Mirror, Timer set), open menu trigger</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .22</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF38</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.92)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">selected</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Active mode segment, primary button</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .92</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFEB</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(24,24,27,0.96)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">overlay</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Menus, tooltips, toasts (no blur — near-opaque)</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">rgba(24,24,27,.96)</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x18181BF5</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.08)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">item_hover</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Menu row / pill segment hover; dividers</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .08</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF14</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.10)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">keycap</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Keycap fill</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .10</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF1A</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.16)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">keycap_border</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Keycap 1 px border</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .16</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF29</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.10)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">border_subtle</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">1 px border on overlays, error tile</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .10</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF1A</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.24)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">border_strong</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Thumbnail 1.5 px border (hover: white .48 = 0xFFFFFF7A)</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .24</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF3D</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.06)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">icon_tile</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Error illustration tile</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .06</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF0F</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.96)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">text_primary</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Labels, numerals, icons</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .96</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFF5</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.72)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">text_secondary</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Camera name, body copy, inactive segment</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .72</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFB8</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.50)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">text_tertiary</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Menu headers, hints, folder paths</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .50</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF80</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.32)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">text_disabled</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Disabled icons and shutter</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .32</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFF52</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: #111113"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">text_on_selected</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Text and icons on selected fills</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">#111113</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x111113FF</span>
+          </div>
+        </div>
+      
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+      <h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 600">Color · shutter, record &amp; effects</h2>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.92)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">shutter_ring</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">4 px ring, every state</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .92</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFEB</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: #FFFFFF"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">shutter_fill</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Photo fill; countdown cancel fill</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">#FFFFFF</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFFF</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.86)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">shutter_fill_hover</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Photo fill, hover</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .86</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFDB</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.70)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">shutter_fill_pressed</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Photo fill, pressed and during flash</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .70</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFB3</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: #FF453A"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">record</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">The only accent: video fill, stop square, rec dot</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">#FF453A</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFF453AFF</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: #FF5F55"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">record_hover</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Video fill, hover</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">#FF5F55</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFF5F55FF</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: #E0352B"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">record_pressed</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Video fill / stop square, pressed</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">#E0352B</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xE0352BFF</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0))"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">scrim_top</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">96 px gradient behind the top row</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">black .40 → 0</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x00000066</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.55), rgba(0,0,0,0))"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">scrim_bottom</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">200 px gradient behind bottom controls</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">black .55 → 0</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x0000008C</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(0,0,0,0.25)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">dim</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Whole Viewfinder during countdown</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">black .25</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x00000040</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.80)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">flash</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Capture flash peak, drawn under the controls</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .80</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFCC</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(0,0,0,0.60)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">thumb_badge</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">18 px play badge on a video thumbnail</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">black .60</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x00000099</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(255,255,255,0.90)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">focus_ring</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">2 px ring, 2 px outside the control</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">white .90</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0xFFFFFFE6</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(0,0,0,0.24)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">shadow_control</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Buttons and pill sitting on the image</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">0 2 8 black .24</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x0000003D</span>
+          </div>
+        </div>
+      
+        <div style="display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+          <div style="width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.10); background: linear-gradient(135deg, #000000 50%, #6b625a 50%)"><div style="position: absolute; inset: 0; background: rgba(0,0,0,0.40)"></div></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">shadow_overlay</span>
+            <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Menus, tooltips, toasts</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.72)">0 8 24 black .40</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(255,255,255,0.50)">0x00000066</span>
+          </div>
+        </div>
+      
+    </section>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start">
+    
+      <section style="display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Radius</h2>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.50)">px</span>
+        </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">radius.xs</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">4</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Keycap</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">radius.stop</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">6</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Recording stop square</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">radius.sm</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">8</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Tooltip, menu row</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">radius.md</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">10</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Icon button, thumbnail</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">radius.lg</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">14</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Menu panel</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">radius.full</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">9999</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Shutter, mode pill, Mirror, toast, rec timer, primary button</span>
+          </div>
+        
+      </section>
+    
+      <section style="display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Spacing</h2>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.50)">4 px base, plus 2</span>
+        </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">space.2</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">2</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Pill inset, gap between segments</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">space.4</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">4</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Menu inset, icon–label gap in buttons</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">space.8</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">8</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Top-button gap; tooltip / menu offset; icon–text gap</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">space.12</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">12</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Control and menu-row horizontal padding</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">space.16</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">16</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Window inset (top, sides); pill → shutter</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">space.24</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">24</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Bottom inset; error stack gap</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">space.40</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">40</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Thumbnail ↔ Shutter ↔ Mirror</span>
+          </div>
+        
+      </section>
+    
+      <section style="display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Type</h2>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.50)">Inter · size / weight</span>
+        </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">type.countdown</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">144 / 300</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Countdown numeral, tabular, line-height 1</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">type.title</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">18 / 600</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Error title, line-height 24</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">type.body</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">13 / 400</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Error message, line-height 20</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">type.label</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">13 / 500</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Pill, menu rows (600 when selected)</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">type.timecode</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">13 / 600</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Rec timer, tabular figures</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">type.small</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">12 / 500</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Camera name, tooltip, toast; 600 on 1080p button</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">type.caption</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">11 / 600</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Keycaps, menu headers</span>
+          </div>
+        
+      </section>
+    
+      <section style="display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Icons</h2>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.50)">stroke 1.75 on a 24 grid, round</span>
+        </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">icon.sm</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">14</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Camera-name glyph, chevrons</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">icon.md</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">16</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Menu check, toast, Retry, empty thumbnail</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">icon.lg</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">20</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Timer, Mirror, countdown cancel</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">icon.xl</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">28</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Camera-off, in a 56 px tile</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">icon.play</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">10 filled</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Inside the 18 px video badge</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">stroke.bold</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">2.0</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Check, ×, Retry — the small glyphs</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">set</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">Lucide</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">timer · flip-horizontal · camera · camera-off · check · x · rotate-cw · play · folder · chevron</span>
+          </div>
+        
+      </section>
+    
+      <section style="display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Component sizes</h2>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.50)">px</span>
+        </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">window</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">960 × 540</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Default floating size, 16:9</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">control</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">40</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Timer and Resolution buttons (height)</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">mirror / thumb</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">48</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Bottom-row side controls</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">shutter</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">72</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Ring 4 · gap 4 · fill 56 · stop 26</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">pill</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">36</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Track; segments 32, padding 0 16</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">menu</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">184 / 232</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Timer / Resolution width; rows 32</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">tooltip / keycap</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">28 / 20</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Heights; keycap min-width 20</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">status</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">32</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Rec timer and toast height; rec dot 8</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">button</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">36</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Primary (Retry) height</span>
+          </div>
+        
+      </section>
+    
+      <section style="display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 600">Motion</h2>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.50)">fades and color changes only</span>
+        </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">hover</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">100 ms</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Background / text color, ease-out</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">mode_switch</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">150 ms</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Shutter fill white ↔ red, segment fill</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">controls_in</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">150 ms</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Opacity 0 → 1 on pointer move, ease-out</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">controls_out</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">300 ms</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Opacity 1 → 0, ease-in</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">idle_timeout</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">2500 ms</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Before controls_out; paused while a menu is open</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">menu</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">120 ms</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Opacity on open and close</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">tooltip</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">500 + 100</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Hover delay, then fade-in</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">flash</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">40 + 260</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">0 → .80 → 0; out is ease-out</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">countdown</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">1 s · 150</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Tick interval; each numeral fades in</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">rec_pulse</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">1000 ms</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">Rec dot opacity 1 ↔ .35</span>
+          </div>
+        
+          <div style="display: grid; grid-template-columns: 120px 96px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.96)">toast</span>
+            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: rgba(255,255,255,0.72)">150/2000/300</span>
+            <span style="font-size: 12px; line-height: 16px; color: rgba(255,255,255,0.50)">In / hold / out</span>
+          </div>
+        
+      </section>
+    
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 16px; background: #141416; border: 1px solid rgba(255,255,255,0.08)">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600">theme.rs</h2>
+      <span style="font-size: 12px; color: rgba(255,255,255,0.50)">Drop-in constants for the GPUI port</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<pre style="margin: 0; padding: 20px; border-radius: 12px; background: #0B0B0C; border: 1px solid rgba(255,255,255,0.08); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; line-height: 18px; color: rgba(255,255,255,0.86); white-space: pre; overflow-x: auto">// theme.rs — Camera design tokens (GPUI)
+// Colors are 0xRRGGBBAA: gpui::rgba(color::CONTROL)
+
+pub mod color {
+    pub const LETTERBOX: u32           = 0x000000FF;
+    pub const APP_BG: u32              = 0x0B0B0CFF;
+    pub const CONTROL: u32             = 0x1414168F;
+    pub const CONTROL_HOVER: u32       = 0x242428B8;
+    pub const CONTROL_ON: u32          = 0xFFFFFF38;
+    pub const SELECTED: u32            = 0xFFFFFFEB;
+    pub const OVERLAY: u32             = 0x18181BF5;
+    pub const ITEM_HOVER: u32          = 0xFFFFFF14;
+    pub const KEYCAP: u32              = 0xFFFFFF1A;
+    pub const KEYCAP_BORDER: u32       = 0xFFFFFF29;
+    pub const BORDER_SUBTLE: u32       = 0xFFFFFF1A;
+    pub const BORDER_STRONG: u32       = 0xFFFFFF3D;
+    pub const BORDER_STRONG_HOVER: u32 = 0xFFFFFF7A;
+    pub const ICON_TILE: u32           = 0xFFFFFF0F;
+    pub const TEXT_PRIMARY: u32        = 0xFFFFFFF5;
+    pub const TEXT_SECONDARY: u32      = 0xFFFFFFB8;
+    pub const TEXT_TERTIARY: u32       = 0xFFFFFF80;
+    pub const TEXT_DISABLED: u32       = 0xFFFFFF52;
+    pub const TEXT_ON_SELECTED: u32    = 0x111113FF;
+
+    pub const SHUTTER_RING: u32         = 0xFFFFFFEB;
+    pub const SHUTTER_FILL: u32         = 0xFFFFFFFF;
+    pub const SHUTTER_FILL_HOVER: u32   = 0xFFFFFFDB;
+    pub const SHUTTER_FILL_PRESSED: u32 = 0xFFFFFFB3;
+    pub const RECORD: u32               = 0xFF453AFF;
+    pub const RECORD_HOVER: u32         = 0xFF5F55FF;
+    pub const RECORD_PRESSED: u32       = 0xE0352BFF;
+
+    // Gradients: color at the edge, fading to transparent
+    pub const SCRIM_TOP: u32      = 0x00000066; // 96 px, top down
+    pub const SCRIM_BOTTOM: u32   = 0x0000008C; // 200 px, bottom up
+    pub const DIM: u32            = 0x00000040; // countdown
+    pub const FLASH: u32          = 0xFFFFFFCC; // peak
+    pub const THUMB_BADGE: u32    = 0x00000099;
+    pub const FOCUS_RING: u32     = 0xFFFFFFE6;
+    pub const SHADOW_CONTROL: u32 = 0x0000003D; // y 2, blur 8
+    pub const SHADOW_OVERLAY: u32 = 0x00000066; // y 8, blur 24
+}</pre>
+<pre style="margin: 0; padding: 20px; border-radius: 12px; background: #0B0B0C; border: 1px solid rgba(255,255,255,0.08); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; line-height: 18px; color: rgba(255,255,255,0.86); white-space: pre; overflow-x: auto">// Lengths in logical px: gpui::px(size::SHUTTER)
+pub mod radius {
+    pub const XS: f32 = 4.0;  pub const STOP: f32 = 6.0;
+    pub const SM: f32 = 8.0;  pub const MD: f32 = 10.0;
+    pub const LG: f32 = 14.0; pub const FULL: f32 = 9999.0;
+}
+pub mod space {
+    pub const S2: f32 = 2.0;   pub const S4: f32 = 4.0;
+    pub const S8: f32 = 8.0;   pub const S12: f32 = 12.0;
+    pub const S16: f32 = 16.0; pub const S24: f32 = 24.0;
+    pub const S40: f32 = 40.0;
+}
+pub mod size {
+    pub const CONTROL: f32 = 40.0;  pub const MIRROR: f32 = 48.0;
+    pub const THUMB: f32 = 48.0;    pub const SHUTTER: f32 = 72.0;
+    pub const SHUTTER_RING: f32 = 4.0;
+    pub const SHUTTER_FILL: f32 = 56.0;
+    pub const STOP: f32 = 26.0;     pub const PILL: f32 = 36.0;
+    pub const SEGMENT: f32 = 32.0;  pub const MENU_ROW: f32 = 32.0;
+    pub const TOOLTIP: f32 = 28.0;  pub const KEYCAP: f32 = 20.0;
+    pub const STATUS: f32 = 32.0;   pub const REC_DOT: f32 = 8.0;
+    pub const ICON_SM: f32 = 14.0;  pub const ICON_MD: f32 = 16.0;
+    pub const ICON_LG: f32 = 20.0;  pub const ICON_XL: f32 = 28.0;
+}
+pub mod font {
+    // Weights: FontWeight::LIGHT / NORMAL / MEDIUM / SEMIBOLD
+    pub const FAMILY: &amp;str = "Inter";
+    pub const COUNTDOWN: f32 = 144.0; // LIGHT, tabular
+    pub const TITLE: f32 = 18.0;      // SEMIBOLD
+    pub const BODY: f32 = 13.0;       // NORMAL, line 20
+    pub const LABEL: f32 = 13.0;      // MEDIUM / SEMIBOLD
+    pub const SMALL: f32 = 12.0;      // MEDIUM
+    pub const CAPTION: f32 = 11.0;    // SEMIBOLD
+}
+pub mod motion {
+    use std::time::Duration;
+    const fn ms(v: u64) -&gt; Duration { Duration::from_millis(v) }
+    pub const HOVER: Duration = ms(100);
+    pub const MODE_SWITCH: Duration = ms(150);
+    pub const CONTROLS_IN: Duration = ms(150);
+    pub const CONTROLS_OUT: Duration = ms(300);
+    pub const IDLE_TIMEOUT: Duration = ms(2500);
+    pub const MENU: Duration = ms(120);
+    pub const TOOLTIP_DELAY: Duration = ms(500);
+    pub const FLASH_IN: Duration = ms(40);
+    pub const FLASH_OUT: Duration = ms(260);
+    pub const TICK_FADE: Duration = ms(150);
+    pub const REC_PULSE: Duration = ms(1000);
+    pub const TOAST_HOLD: Duration = ms(2000);
+}</pre>
+    </div>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera — 6 · Error — access denied</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+body{margin:0;background:#0B0B0C}
+button{font-family:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<div style="width: 960px; height: 540px; position: relative; overflow: hidden; background: #0B0B0C; font-family: Inter, system-ui, sans-serif; color: rgba(255,255,255,0.96)">
+
+  <div style="position: absolute; left: 16px; top: 16px; height: 40px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.50)">
+    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h3l1.5-2h7l1.5 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+    <span>Integrated Camera</span>
+  </div>
+
+  <div role="alert" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center">
+    <div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.72)">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M9.5 5.5h6l1.5 2h3a1 1 0 0 1 1 1v9"></path><path d="M18 19.5H4a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1h2.5"></path><path d="M9.6 10.6a3.5 3.5 0 0 0 4.8 4.8"></path></svg>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 380px">
+      <h1 style="margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; color: rgba(255,255,255,0.96)">Camera access denied</h1>
+      <p style="margin: 0; font-size: 13px; line-height: 20px; font-weight: 400; color: rgba(255,255,255,0.72); text-wrap: pretty">Camera doesn’t have permission to open the webcam. Check the device permissions, then try again.</p>
+    </div>
+    <button style="height: 36px; padding: 0 18px 0 14px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.92); color: #111113; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"></path><path d="M20 4v5h-5"></path></svg>
+      <span>Retry</span>
+    </button>
+  </div>
+</div>
+</body>
+</html>

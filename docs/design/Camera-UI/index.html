@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera — UI design</title>
+<link rel="stylesheet" href="html/fonts/fonts.css">
+<style>
+body{margin:0;padding:48px 24px;background:#0B0B0C;color:rgba(255,255,255,.96);font-family:Inter,system-ui,sans-serif}
+h1{margin:0 auto 8px;max-width:1200px;font-size:28px;font-weight:600}
+p{margin:0 auto 32px;max-width:1200px;font-size:13px;color:rgba(255,255,255,.72)}
+main{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:24px}
+a{display:flex;flex-direction:column;gap:10px;color:inherit;text-decoration:none;font-size:13px;font-weight:500}
+img{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:top;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:#141416}
+a:hover img{border-color:rgba(255,255,255,.32)}
+</style>
+</head>
+<body>
+<h1>Camera — UI design</h1>
+<p>Click a screen to open its standalone HTML. Full-resolution PNGs (2×) are in the png folder.</p>
+<main>
+  <a href="html/01-ready-photo.html"><img src="png/01-ready-photo.png" alt="1 · Ready — Photo" loading="lazy"><span>1 · Ready — Photo</span></a>
+  <a href="html/02-ready-video.html"><img src="png/02-ready-video.png" alt="2 · Ready — Video" loading="lazy"><span>2 · Ready — Video</span></a>
+  <a href="html/03-timer-countdown.html"><img src="png/03-timer-countdown.png" alt="3 · Timer countdown" loading="lazy"><span>3 · Timer countdown</span></a>
+  <a href="html/04-recording.html"><img src="png/04-recording.png" alt="4 · Recording" loading="lazy"><span>4 · Recording</span></a>
+  <a href="html/05-photo-flash.html"><img src="png/05-photo-flash.png" alt="5 · Photo taken (flash)" loading="lazy"><span>5 · Photo taken (flash)</span></a>
+  <a href="html/06-error-busy.html"><img src="png/06-error-busy.png" alt="6 · Error — camera in use" loading="lazy"><span>6 · Error — camera in use</span></a>
+  <a href="html/06-error-denied.html"><img src="png/06-error-denied.png" alt="6 · Error — access denied" loading="lazy"><span>6 · Error — access denied</span></a>
+  <a href="html/06-error-missing.html"><img src="png/06-error-missing.png" alt="6 · Error — no camera" loading="lazy"><span>6 · Error — no camera</span></a>
+  <a href="html/07a-timer-menu.html"><img src="png/07a-timer-menu.png" alt="7a · Timer menu open" loading="lazy"><span>7a · Timer menu open</span></a>
+  <a href="html/07b-resolution-menu.html"><img src="png/07b-resolution-menu.png" alt="7b · Resolution menu open" loading="lazy"><span>7b · Resolution menu open</span></a>
+  <a href="html/08-components.html"><img src="png/08-components.png" alt="Component sheet" loading="lazy"><span>Component sheet</span></a>
+  <a href="html/09-design-tokens.html"><img src="png/09-design-tokens.png" alt="Design tokens" loading="lazy"><span>Design tokens</span></a>
+</main>
+</body>
+</html>

@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use super::resolution::Resolution;
 
 /// A capture-capable camera and the MJPG Resolutions it supports.
@@ -18,6 +20,10 @@ pub enum CameraError {
     NoCamera,
 }
 
+/// The Photo could not be saved.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PhotoError;
+
 /// What the core needs from a camera; GStreamer implements it, tests use a fake.
 pub trait CameraBackend {
     /// Find the first capture-capable camera.
@@ -25,4 +31,7 @@ pub trait CameraBackend {
 
     /// Start the Viewfinder at the given Resolution.
     fn start_viewfinder(&mut self, resolution: Resolution) -> Result<(), CameraError>;
+
+    /// Save the current Viewfinder frame as a JPEG in `folder`, returning the file's path.
+    fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError>;
 }

@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.104"
+chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
+dirs = "7.0.0"
 futures = "0.3"
 gpui = "=0.2.2"
 gstreamer = "0.25.4"
@@ -18,3 +20,7 @@ debug = "line-tables-only"
 
 [profile.dev.package."*"]
 debug = false
+
+[dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["jpeg"] }
+tempfile = "3.27.0"

@@ -1,12 +1,17 @@
 //! Real camera backend: V4L2 capture through GStreamer (ADR 0002).
 
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+
+use chrono::Local;
 use futures::channel::mpsc::Sender;
 use gstreamer as gst;
 use gstreamer::prelude::*;
 use gstreamer_app as gst_app;
 
-use crate::app_core::backend::{Camera, CameraBackend, CameraError};
+use crate::app_core::backend::{Camera, CameraBackend, CameraError, PhotoError};
 use crate::app_core::resolution::Resolution;
+use crate::photo_store;
 
 /// One decoded Viewfinder frame: tightly packed BGRA rows.
 pub struct Frame {
@@ -31,6 +36,8 @@ pub struct GstCamera {
     source: Option<String>,
     frames: Sender<Frame>,
     pipeline: Option<gst::Pipeline>,
+    /// The newest MJPG frame the camera delivered, already a complete JPEG file.
+    latest_jpeg: Arc<Mutex<Option<gst::Buffer>>>,
 }
 
 impl GstCamera {
@@ -40,6 +47,7 @@ impl GstCamera {
             source: None,
             frames,
             pipeline: None,
+            latest_jpeg: Arc::default(),
         }
     }
 }
@@ -81,9 +89,26 @@ impl CameraBackend for GstCamera {
         let source = self.source.as_deref().ok_or(CameraError::NoCamera)?;
         let pipeline = viewfinder_pipeline(source, resolution)?;
         send_frames_to(&pipeline, self.frames.clone())?;
+        keep_latest_jpeg(&pipeline, Arc::clone(&self.latest_jpeg))?;
         play(&pipeline)?;
         self.pipeline = Some(pipeline);
         Ok(())
+    }
+
+    /// Write the newest MJPG frame to `folder` as it came from the camera, without re-encoding.
+    fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError> {
+        // A poisoned lock only means another thread panicked mid-store; the buffer inside is still whole.
+        let buffer = self
+            .latest_jpeg
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+            .ok_or(PhotoError)?;
+        let jpeg = buffer.map_readable().map_err(|_| PhotoError)?;
+        photo_store::save_jpeg(folder, &jpeg, Local::now()).map_err(|error| {
+            eprintln!("Could not save the photo: {error}");
+            PhotoError
+        })
     }
 }
 
@@ -111,12 +136,15 @@ fn video_node_number(path: &str) -> Option<u32> {
     path.strip_prefix("/dev/video")?.parse().ok()
 }
 
-/// Build `source` → MJPG at `resolution` → decode → BGRA appsink. No frame rate is forced.
+/// Build `source` → MJPG at `resolution`, split in two: decode → BGRA appsink for the Viewfinder,
+/// and the untouched JPEG → appsink for Photos. No frame rate is forced.
 fn viewfinder_pipeline(source: &str, resolution: Resolution) -> Result<gst::Pipeline, CameraError> {
     let Resolution { width, height } = resolution;
     let description = format!(
-        "{source} ! image/jpeg,width={width},height={height} ! jpegdec ! videoconvert \
-         ! video/x-raw,format=BGRA ! appsink name=frames max-buffers=1 drop=true sync=false"
+        "{source} ! image/jpeg,width={width},height={height} ! tee name=mjpg \
+         mjpg. ! queue ! jpegdec ! videoconvert ! video/x-raw,format=BGRA \
+         ! appsink name=frames max-buffers=1 drop=true sync=false \
+         mjpg. ! queue ! appsink name=jpeg max-buffers=1 drop=true sync=false"
     );
     // A parse failure means a GStreamer plugin is missing: no usable camera.
     gst::parse::launch(&description)
@@ -138,6 +166,30 @@ fn send_frames_to(pipeline: &gst::Pipeline, mut frames: Sender<Frame>) -> Result
                 // A full channel means the UI has not drawn the last frame yet: dropping this one keeps latency low.
                 let _ = frames.try_send(frame);
             }
+            Ok(gst::FlowSuccess::Ok)
+        })
+        .build();
+    sink.set_callbacks(callbacks);
+    Ok(())
+}
+
+/// Remember the newest JPEG frame from the pipeline's `jpeg` appsink in `latest`.
+fn keep_latest_jpeg(
+    pipeline: &gst::Pipeline,
+    latest: Arc<Mutex<Option<gst::Buffer>>>,
+) -> Result<(), CameraError> {
+    let sink = pipeline
+        .by_name("jpeg")
+        .and_then(|element| element.downcast::<gst_app::AppSink>().ok())
+        .ok_or(CameraError::NoCamera)?;
+    let callbacks = gst_app::AppSinkCallbacks::builder()
+        .new_sample(move |sink| {
+            let sample = sink.pull_sample().map_err(|_| gst::FlowError::Eos)?;
+            // Cloning a buffer shares its memory, so keeping it costs no copy.
+            let mut slot = latest
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            *slot = sample.buffer_owned();
             Ok(gst::FlowSuccess::Ok)
         })
         .build();
@@ -246,5 +298,29 @@ mod tests {
         };
         assert_eq!(frame.size, res(640, 360));
         assert_eq!(frame.bgra.len(), 640 * 360 * 4);
+    }
+
+    /// The real backend writes a valid JPEG of the requested size from `videotestsrc` into a temp folder.
+    #[test]
+    fn test_source_photo_is_saved_as_a_valid_jpeg() {
+        gst::init().unwrap();
+        let (frames_tx, _frames_rx) = mpsc::channel(0);
+        let mut camera = GstCamera::new(frames_tx);
+        camera.source = Some("videotestsrc is-live=true ! jpegenc".into());
+        camera.start_viewfinder(res(640, 360)).unwrap();
+        let folder = tempfile::tempdir().unwrap();
+
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let path = loop {
+            if let Ok(path) = camera.take_photo(folder.path()) {
+                break path;
+            }
+            assert!(Instant::now() < deadline, "no photo within 5 s");
+            std::thread::sleep(Duration::from_millis(10));
+        };
+
+        let decoded = image::open(&path).unwrap();
+        assert_eq!((decoded.width(), decoded.height()), (640, 360));
+        assert_eq!(path.extension().unwrap(), "jpg");
     }
 }

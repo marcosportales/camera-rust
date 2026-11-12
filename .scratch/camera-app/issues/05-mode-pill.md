@@ -8,6 +8,8 @@
 
 **Design reference:** `html/01-ready-photo.html`, `html/02-ready-video.html`, `html/08-components.html` (Mode pill, Shutter "video" states).
 
+**GPUI references:** Key bindings (P, V): [`input.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/input.rs), [`key_dispatch.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/key_dispatch.md).
+
 - [ ] Pill above the Shutter, `space.16` gap, centered, track `size::PILL` (36) tall, `radius::FULL`, fill `color::CONTROL`, `shadow_control`. Two segments labelled "Photo" and "Video", each `size::SEGMENT` (32) tall, horizontal padding 16, inset `space.2`, as in the design.
 - [ ] Active segment: fill `color::SELECTED`, text `TEXT_ON_SELECTED`, `type.label` weight 600. Inactive: transparent, `type.label` weight 500, text color as in `01-ready-photo.html`. Inactive hover: fill `ITEM_HOVER`. Fade `motion::MODE_SWITCH` (150 ms) for the segment fill.
 - [ ] Clicking a segment sets the Mode. P selects Photo, V selects Video. Selecting the already active Mode does nothing.

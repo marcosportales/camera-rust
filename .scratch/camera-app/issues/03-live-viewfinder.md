@@ -8,6 +8,8 @@
 
 **Design reference:** `html/01-ready-photo.html` / `png/01-ready-photo.png`, only these parts: image, `scrim_top` gradient, camera name. ADR `0002`.
 
+**GPUI references:** Async from entities: [`contexts.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/contexts.md); Images: [`image_loading.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/image_loading.rs) (`RenderImage`); `Window::paint_image` in `window.rs`. No example feeds live camera frames: expect to spike the GStreamer-to-GPUI frame handoff here.
+
 - [ ] A real implementation of the camera backend trait from ticket 02 uses GStreamer: `v4l2src` requesting MJPG, decoded and delivered to the app through an `appsink`.
 - [ ] Camera selection: the first `/dev/video*` node with video-capture capability, skipping metadata nodes. The camera name is the device name reported by V4L2 (not hard-coded).
 - [ ] Supported Resolutions are read from the camera's MJPG modes only. YUYV modes are ignored.

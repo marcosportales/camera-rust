@@ -8,6 +8,8 @@
 
 **Design reference:** `html/01-ready-photo.html`, `html/08-components.html` (Last-capture thumbnail: empty, photo, hover, just saved).
 
+**GPUI references:** Image display: [`image_gallery.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/image_gallery.rs).
+
 - [ ] Thumbnail left of the Shutter at `space.40` gap, `size::THUMB` (48) square, `radius::MD`, images cropped to fill. Hover/"just saved" looks as in the component sheet.
 - [ ] At startup the app finds the newest file (by modification time) among `*.jpg` in the Photos folder and `*.mp4` in the Videos folder, and shows it. In this ticket only a `*.jpg` can be shown; if the newest file is an `.mp4`, the empty look is shown (ticket 18 handles it).
 - [ ] If neither folder exists or both are empty, the empty look from the component sheet (the `folder` icon at `icon.md`) is shown, and the Thumbnail remains clickable.

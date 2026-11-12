@@ -8,6 +8,8 @@
 
 **Design reference:** `docs/design/Camera-UI/html/09-design-tokens.html` (the `theme.rs` block), `docs/design/Camera-UI/html/fonts/`.
 
+**GPUI references:** SVG assets: [`svg/svg.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/svg/svg.rs).
+
 - [ ] `cargo run` opens one window titled `Camera`, default size 960 × 540 logical px, resizable, with no custom title bar drawn by the app.
 - [ ] The window background is `color::APP_BG`.
 - [ ] Closing the window ends the process with exit code 0.

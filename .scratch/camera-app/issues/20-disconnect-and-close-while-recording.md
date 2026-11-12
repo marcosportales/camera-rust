@@ -8,6 +8,8 @@
 
 **Design reference:** screens from tickets 07 and 19 (no new screen).
 
+**GPUI references:** Window close handling: [`on_window_close_quit.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/on_window_close_quit.rs).
+
 - [ ] Closing the window while recording sends EOS, waits for the file to be finalized, and only then exits the process. The Shutter is not clickable after close was requested.
 - [ ] If finalization after a close fails, the process exits anyway; no dialog.
 - [ ] If the camera disappears while recording (device removed, pipeline error from the source), the recording stops in an orderly way: the app sends EOS and tries to finalize the partial Video. If finalized, the file stays on disk and the toast "Video saved" (ticket 07) is shown only after EOS completes; if it cannot be finalized, the failure toast from ticket 07 is shown.

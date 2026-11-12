@@ -8,6 +8,8 @@
 
 **Design reference:** motion tokens in `html/09-design-tokens.html` (`controls_in`, `controls_out`, `idle_timeout`).
 
+**GPUI references:** Fade: [`animation.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/animation.rs); idle timer: [`contexts.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/contexts.md).
+
 - [ ] "Controls" are: Timer button, Resolution button, mode pill, Last-Capture Thumbnail (if present), Shutter, Mirror button, and the `scrim_top`/`scrim_bottom` gradients. The camera name stays visible always.
 - [ ] After `motion::IDLE_TIMEOUT` (2500 ms) with no mouse movement over the window, controls fade out over `motion::CONTROLS_OUT` (300 ms, ease-in). Mouse movement fades them in over `motion::CONTROLS_IN` (150 ms, ease-out) and restarts the idle timer.
 - [ ] The idle timer is paused while a menu (Timer or Resolution) is open; controls stay visible.

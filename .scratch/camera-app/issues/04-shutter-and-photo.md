@@ -8,6 +8,8 @@
 
 **Design reference:** `html/01-ready-photo.html` and `html/05-photo-flash.html` (`png/01-ready-photo.png`, `png/05-photo-flash.png`), component sheet `html/08-components.html` (Shutter states).
 
+**GPUI references:** Key binding (Space): [`input.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/input.rs), [`key_dispatch.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/key_dispatch.md); Flash and toast opacity: [`opacity.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/opacity.rs), [`animation.rs`](https://github.com/zed-industries/zed/blob/main/crates/gpui/examples/animation.rs).
+
 - [ ] Shutter: bottom center, `size::SHUTTER` (72) total, ring `size::SHUTTER_RING` (4) in `color::SHUTTER_RING`, 4 px gap, fill `size::SHUTTER_FILL` (56). Fill is `SHUTTER_FILL`; hover `SHUTTER_FILL_HOVER`; pressed `SHUTTER_FILL_PRESSED`; fades 100 ms (`motion::HOVER`). Bottom inset `space.24`. Behind it, the `scrim_bottom` gradient (200 px).
 - [ ] Clicking the Shutter, or pressing Space, takes one Photo. Every press takes one Photo: no debounce.
 - [ ] The Photo is the current Viewfinder frame at the active Resolution, saved as a valid JPEG. The MJPG frame is not re-encoded. Mirror never applies (it does not exist yet).

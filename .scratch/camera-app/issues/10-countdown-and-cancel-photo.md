@@ -8,6 +8,8 @@
 
 **Design reference:** `html/03-timer-countdown.html` / `png/03-timer-countdown.png`.
 
+**GPUI references:** Countdown timer and cancel (Esc): [`contexts.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/contexts.md), [`key_dispatch.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/key_dispatch.md).
+
 - [ ] With Timer Off, behavior is unchanged (Photo is immediate).
 - [ ] With Timer 3s or 10s, pressing the Shutter or Space in Photo Mode starts a countdown from the Timer value down to 1, one tick per second. The Photo is taken when the countdown ends (no tick shown for 0).
 - [ ] Screen as in `03-timer-countdown.html`: the numeral in `type.countdown` (144 / weight 300, tabular, line-height 1) at the position in the design; each new numeral fades in over `motion::TICK_FADE` (150 ms); a full-window `color::DIM` overlay over the Viewfinder; `scrim_bottom` kept; the hint "Esc" keycap + "to cancel" below the numeral as in the design.

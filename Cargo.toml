@@ -5,7 +5,11 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.104"
+futures = "0.3"
 gpui = "=0.2.2"
+gstreamer = "0.25.4"
+gstreamer-app = "0.25.2"
+image = { version = "0.25", default-features = false }
 
 # Lighter debug builds: less RAM/disk at link time, faster incremental rebuilds.
 # Our crate keeps file:line backtraces; dependencies (gpui, ~700 crates) get none.

@@ -5,8 +5,8 @@ mod assets;
 mod theme;
 
 use gpui::{
-    App, Application, Bounds, Context, SharedString, TitlebarOptions, Window, WindowBounds,
-    WindowOptions, div, prelude::*, px, rgba, size,
+    App, Application, Bounds, Context, Window, WindowBounds, WindowOptions, div, prelude::*, px,
+    rgba, size,
 };
 
 use assets::Assets;
@@ -45,14 +45,15 @@ fn main() {
         let bounds = Bounds::centered(None, size(px(WINDOW_WIDTH), px(WINDOW_HEIGHT)), cx);
         let options = WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(bounds)),
-            titlebar: Some(TitlebarOptions {
-                title: Some(SharedString::from("Camera")),
-                ..Default::default()
-            }),
             ..Default::default()
         };
         // Opening can fail at runtime (e.g. no Vulkan), so report it and exit instead of panicking.
-        if let Err(error) = cx.open_window(options, |_, cx| cx.new(|_| CameraWindow)) {
+        let opened = cx.open_window(options, |window, cx| {
+            // `WindowOptions::titlebar` is ignored on Wayland in GPUI 0.2.2, so set the title explicitly.
+            window.set_window_title("Camera");
+            cx.new(|_| CameraWindow)
+        });
+        if let Err(error) = opened {
             eprintln!("Could not open the Camera window: {error:#}");
             cx.quit();
             return;

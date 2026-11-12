@@ -26,12 +26,10 @@
 
 ## Implementation notes
 
-Not checked off: no display or camera was available in this session, so these were implemented but never run in the GUI. All are non-blocking; urgency medium (one manual pass covers all of them).
+Manually verified by the user with a real webcam: the Shutter is displayed correctly, Space takes a Photo, and `~/Pictures/Camera/2026-11-12_22-54-09.jpg` is a valid JPEG (checked with `file`). Remaining items were implemented but not exercised in the GUI; all are non-blocking, urgency medium (one manual pass covers them).
 
-- **Shutter geometry, fill states and 100 ms fade** (`src/photo_ui.rs` `shutter`, `FillTransition`; `src/camera_window.rs` `shutter`, `update_shutter_fill`): built to spec but not looked at. Known quirk: if the fill target changes mid-fade, the colour jumps to the previous target before fading again (low).
-- **`scrim_bottom` gradient** (`src/camera_window.rs` `scrim_bottom`): gradient angle 0 is assumed to fade upward from the bottom edge; not confirmed visually.
-- **Click and Space take a Photo, no debounce** (`src/camera_window.rs` `take_photo`, key binding in `src/main.rs`): the core path is tested (`every_press_takes_a_photo`), but the Space binding relies on the root view holding focus and was not exercised.
-- **Flash under the controls and Shutter pressed while it plays** (`src/camera_window.rs` `render`): flash is added before scrims and controls; draw order and timing (`envelope` is unit-tested) not seen on screen.
-- **Toast** (`src/photo_ui.rs` `toast`): layout, icons (`check` and `x` at stroke 2 from the bundled SVGs), fade timings 150/2000/300 ms (reusing `CONTROLS_IN`/`CONTROLS_OUT`, no dedicated toast tokens) not seen on screen.
-- **Toast and flash only after the file is fully written, failure shows toast only**: the write is synchronous on the UI thread (`take_photo` in `src/camera_window.rs`), so the ordering holds, but a slow disk could stall the Viewfinder (low). Failure toast untested in the GUI.
-- **Real camera**: the `tee` pipeline in `src/gst_camera.rs` (`viewfinder_pipeline`) was tested only with `videotestsrc` (`test_source_photo_is_saved_as_a_valid_jpeg`), not a real V4L2 device. A press before the first frame arrives shows "Couldn't save photo".
+- **Shutter hover/pressed states and 100 ms fade, `scrim_bottom`** (`src/photo_ui.rs` `shutter`, `FillTransition`; `src/camera_window.rs` `scrim_bottom`): resting look confirmed; hover, press and fade not confirmed. Known quirk: if the fill target changes mid-fade, the colour jumps to the previous target before fading again (low).
+- **Click on the Shutter takes a Photo, no debounce** (`src/camera_window.rs` `shutter`, `take_photo`): Space confirmed, mouse click not; `every_press_takes_a_photo` covers the core.
+- **Flash under the controls and Shutter pressed while it plays** (`src/camera_window.rs` `render`): draw order and timing (`envelope` is unit-tested) not confirmed on screen.
+- **Toast** (`src/photo_ui.rs` `toast`): layout, icons, fade timings 150/2000/300 ms (reusing `CONTROLS_IN`/`CONTROLS_OUT`, no dedicated toast tokens) not confirmed on screen.
+- **Failure path**: the "Couldn't save photo" toast with no flash was not triggered in the GUI. The write is synchronous on the UI thread (`take_photo` in `src/camera_window.rs`), so a slow disk could stall the Viewfinder (low). A press before the first frame arrives shows the failure toast.

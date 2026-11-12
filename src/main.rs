@@ -3,8 +3,10 @@
 mod app_core;
 mod assets;
 mod camera_window;
+mod feedback;
 mod gst_camera;
 mod mode_pill;
+mod overlays;
 mod photo_store;
 mod photo_ui;
 // Verbatim copy of the design tokens page; later tickets consume the constants.

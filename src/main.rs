@@ -4,15 +4,19 @@ mod app_core;
 mod assets;
 mod camera_window;
 mod gst_camera;
+mod photo_store;
+mod photo_ui;
 // Verbatim copy of the design tokens page; later tickets consume the constants.
 #[allow(dead_code)]
 #[rustfmt::skip]
 mod theme;
 
-use gpui::{App, Application, Bounds, WindowBounds, WindowOptions, prelude::*, px, size};
+use gpui::{
+    App, Application, Bounds, KeyBinding, WindowBounds, WindowOptions, prelude::*, px, size,
+};
 
 use assets::Assets;
-use camera_window::CameraWindow;
+use camera_window::{CameraWindow, KEY_CONTEXT, TakePhoto};
 
 /// Default window size in logical px.
 const WINDOW_WIDTH: f32 = 960.0;
@@ -22,6 +26,7 @@ const WINDOW_HEIGHT: f32 = 540.0;
 fn main() {
     Application::new().with_assets(Assets).run(|cx: &mut App| {
         Assets::register_fonts(cx);
+        cx.bind_keys([KeyBinding::new("space", TakePhoto, Some(KEY_CONTEXT))]);
 
         // Quit on the last window close so the process exits with code 0.
         cx.on_window_closed(|cx| {

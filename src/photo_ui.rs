@@ -7,7 +7,7 @@ use gpui::{
     div, point, prelude::*, px, rgba, svg,
 };
 
-use crate::app_core::state::PhotoOutcome;
+use crate::app_core::state::{Mode, PhotoOutcome};
 use crate::photo_store::display_folder;
 use crate::theme::{color, font, motion, radius, size, space};
 
@@ -125,7 +125,7 @@ pub fn toast(id: u64, outcome: &PhotoOutcome) -> impl IntoElement {
         .child(pill)
 }
 
-/// How the Shutter fill looks.
+/// How the Shutter fill reacts to the pointer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShutterFill {
     Rest,
@@ -133,13 +133,23 @@ pub enum ShutterFill {
     Pressed,
 }
 
-impl ShutterFill {
+/// The Shutter fill for a Mode and pointer state: white for Photo, red for Video.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ShutterLook {
+    pub mode: Mode,
+    pub fill: ShutterFill,
+}
+
+impl ShutterLook {
     /// The design token for this look.
     fn color(self) -> u32 {
-        match self {
-            Self::Rest => color::SHUTTER_FILL,
-            Self::Hover => color::SHUTTER_FILL_HOVER,
-            Self::Pressed => color::SHUTTER_FILL_PRESSED,
+        match (self.mode, self.fill) {
+            (Mode::Photo, ShutterFill::Rest) => color::SHUTTER_FILL,
+            (Mode::Photo, ShutterFill::Hover) => color::SHUTTER_FILL_HOVER,
+            (Mode::Photo, ShutterFill::Pressed) => color::SHUTTER_FILL_PRESSED,
+            (Mode::Video, ShutterFill::Rest) => color::RECORD,
+            (Mode::Video, ShutterFill::Hover) => color::RECORD_HOVER,
+            (Mode::Video, ShutterFill::Pressed) => color::RECORD_PRESSED,
         }
     }
 }
@@ -147,23 +157,27 @@ impl ShutterFill {
 /// A fade of the Shutter fill from one look to another; a new `epoch` restarts the animation.
 #[derive(Debug, Clone, Copy)]
 pub struct FillTransition {
-    from: ShutterFill,
-    to: ShutterFill,
+    from: ShutterLook,
+    to: ShutterLook,
     epoch: usize,
 }
 
 impl FillTransition {
-    /// A Shutter at rest.
+    /// A Shutter at rest in Photo Mode.
     pub fn new() -> Self {
+        let rest = ShutterLook {
+            mode: Mode::Photo,
+            fill: ShutterFill::Rest,
+        };
         Self {
-            from: ShutterFill::Rest,
-            to: ShutterFill::Rest,
+            from: rest,
+            to: rest,
             epoch: 0,
         }
     }
 
     /// Start fading to `target`; returns whether anything changed.
-    pub fn retarget(&mut self, target: ShutterFill) -> bool {
+    pub fn retarget(&mut self, target: ShutterLook) -> bool {
         let changed = target != self.to;
         if changed {
             *self = Self {
@@ -174,10 +188,19 @@ impl FillTransition {
         }
         changed
     }
+
+    /// A Mode switch fades over `motion::MODE_SWITCH`, a hover or press over `motion::HOVER`.
+    fn duration(&self) -> Duration {
+        if self.from.mode == self.to.mode {
+            motion::HOVER
+        } else {
+            motion::MODE_SWITCH
+        }
+    }
 }
 
 /// Mix two `0xRRGGBBAA` colors; `t` is 0 for `from` and 1 for `to`.
-fn mix(from: u32, to: u32, t: f32) -> Rgba {
+pub fn mix(from: u32, to: u32, t: f32) -> Rgba {
     let (from, to) = (rgba(from), rgba(to));
     let lerp = |a: f32, b: f32| a + (b - a) * t;
     Rgba {
@@ -188,15 +211,15 @@ fn mix(from: u32, to: u32, t: f32) -> Rgba {
     }
 }
 
-/// The Shutter button: a ring around a fill that fades between its looks over `motion::HOVER`.
+/// The Shutter button: a ring around a fill that fades between its looks.
 pub fn shutter(fill: FillTransition) -> Stateful<Div> {
-    let FillTransition { from, to, epoch } = fill;
+    let (from, to, epoch, duration) = (fill.from, fill.to, fill.epoch, fill.duration());
     let center = div()
         .size(px(size::SHUTTER_FILL))
         .rounded_full()
         .with_animation(
             ("shutter-fill", epoch),
-            Animation::new(motion::HOVER),
+            Animation::new(duration),
             move |center, progress| center.bg(mix(from.color(), to.color(), progress)),
         );
     div()
@@ -237,12 +260,27 @@ mod tests {
     #[test]
     fn retarget_restarts_the_fade_only_when_the_look_changes() {
         let mut fill = FillTransition::new();
-        assert!(!fill.retarget(ShutterFill::Rest));
-        assert!(fill.retarget(ShutterFill::Hover));
-        assert_eq!(
-            (fill.from, fill.to, fill.epoch),
-            (ShutterFill::Rest, ShutterFill::Hover, 1)
-        );
-        assert!(!fill.retarget(ShutterFill::Hover));
+        let look = |mode, fill| ShutterLook { mode, fill };
+        let rest = look(Mode::Photo, ShutterFill::Rest);
+        let hover = look(Mode::Photo, ShutterFill::Hover);
+        assert!(!fill.retarget(rest));
+        assert!(fill.retarget(hover));
+        assert_eq!((fill.from, fill.to, fill.epoch), (rest, hover, 1));
+        assert!(!fill.retarget(hover));
+    }
+
+    #[test]
+    fn a_mode_switch_fades_slower_than_a_hover() {
+        let mut fill = FillTransition::new();
+        fill.retarget(ShutterLook {
+            mode: Mode::Photo,
+            fill: ShutterFill::Hover,
+        });
+        assert_eq!(fill.duration(), motion::HOVER);
+        fill.retarget(ShutterLook {
+            mode: Mode::Video,
+            fill: ShutterFill::Hover,
+        });
+        assert_eq!(fill.duration(), motion::MODE_SWITCH);
     }
 }

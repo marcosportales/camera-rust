@@ -12,13 +12,16 @@ use gpui::{
 };
 
 use crate::app_core::backend::CameraBackend;
-use crate::app_core::state::{AppState, CameraState, Event, PhotoOutcome};
+use crate::app_core::state::{AppState, CameraState, Event, Mode, PhotoOutcome};
 use crate::gst_camera::{Frame, GstCamera};
+use crate::mode_pill;
 use crate::photo_store::photos_folder;
-use crate::photo_ui::{self, FLASH_DURATION, FillTransition, ShutterFill, TOAST_DURATION};
+use crate::photo_ui::{
+    self, FLASH_DURATION, FillTransition, ShutterFill, ShutterLook, TOAST_DURATION,
+};
 use crate::theme::{color, font, size, space};
 
-actions!(camera, [TakePhoto]);
+actions!(camera, [TakePhoto, SelectPhoto, SelectVideo]);
 
 /// Key context of the root view, used to scope key bindings.
 pub const KEY_CONTEXT: &str = "Camera";
@@ -39,6 +42,10 @@ pub struct CameraWindow {
     /// Id of the toast being shown, if any; its text comes from `state.photo`.
     toast: Option<u64>,
     photos_taken: u64,
+    /// The Mode before the current one, so the pill can fade between the two.
+    previous_mode: Mode,
+    /// Counts Mode switches; each one restarts the pill and Shutter fades.
+    mode_switches: usize,
     shutter_hovered: bool,
     shutter_pressed: bool,
     shutter_fill: FillTransition,
@@ -69,6 +76,8 @@ impl CameraWindow {
             flash: None,
             toast: None,
             photos_taken: 0,
+            previous_mode: Mode::Photo,
+            mode_switches: 0,
             shutter_hovered: false,
             shutter_pressed: false,
             shutter_fill: FillTransition::new(),
@@ -91,7 +100,8 @@ impl CameraWindow {
 
     /// Take a Photo; once it is written, flash and toast the outcome. A failure only toasts.
     fn take_photo(&mut self, cx: &mut Context<Self>) {
-        if !matches!(self.state.camera, CameraState::Ready(_)) {
+        // Recording arrives in a later ticket; in Video Mode the Shutter does nothing.
+        if !matches!(self.state.camera, CameraState::Ready(_)) || self.state.mode != Mode::Photo {
             return;
         }
         self.state.take_photo(&mut self.camera, &photos_folder());
@@ -111,6 +121,18 @@ impl CameraWindow {
         self.update_shutter_fill(cx);
     }
 
+    /// Switch to `mode`; does nothing if it is already active or the camera is not ready.
+    fn select_mode(&mut self, mode: Mode, cx: &mut Context<Self>) {
+        if !matches!(self.state.camera, CameraState::Ready(_)) || self.state.mode == mode {
+            return;
+        }
+        self.previous_mode = self.state.mode;
+        self.state.handle(Event::SetMode(mode));
+        self.mode_switches += 1;
+        self.update_shutter_fill(cx);
+        cx.notify();
+    }
+
     /// Remove flash `id`, unless a newer Photo has replaced it.
     fn end_flash(&mut self, id: u64, cx: &mut Context<Self>) {
         if self.flash == Some(id) {
@@ -125,16 +147,17 @@ impl CameraWindow {
         self.update_shutter_fill(cx);
     }
 
-    /// Fade the Shutter fill to the look that matches the flash, press and hover state.
+    /// Fade the Shutter fill to the look that matches the Mode and the flash, press and hover state.
     fn update_shutter_fill(&mut self, cx: &mut Context<Self>) {
-        let target = if self.flash.is_some() || self.shutter_pressed {
+        let fill = if self.flash.is_some() || self.shutter_pressed {
             ShutterFill::Pressed
         } else if self.shutter_hovered {
             ShutterFill::Hover
         } else {
             ShutterFill::Rest
         };
-        if self.shutter_fill.retarget(target) {
+        let mode = self.state.mode;
+        if self.shutter_fill.retarget(ShutterLook { mode, fill }) {
             cx.notify();
         }
     }
@@ -193,6 +216,12 @@ impl Render for CameraWindow {
             .key_context(KEY_CONTEXT)
             .track_focus(&self.focus)
             .on_action(cx.listener(|this, _: &TakePhoto, _, cx| this.take_photo(cx)))
+            .on_action(
+                cx.listener(|this, _: &SelectPhoto, _, cx| this.select_mode(Mode::Photo, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &SelectVideo, _, cx| this.select_mode(Mode::Video, cx)),
+            )
             .size_full()
             .relative()
             .bg(rgba(color::APP_BG))
@@ -207,6 +236,7 @@ impl Render for CameraWindow {
             .child(scrim_top())
             .child(scrim_bottom())
             .child(camera_label(SharedString::from(camera.name.clone())))
+            .child(self.mode_pill(cx))
             .child(self.shutter(cx))
             .children(
                 self.toast
@@ -217,6 +247,33 @@ impl Render for CameraWindow {
 }
 
 impl CameraWindow {
+    /// The Mode pill centered above the Shutter, `space.16` above its top edge.
+    fn mode_pill(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        div()
+            .absolute()
+            .bottom(px(space::S24 + size::SHUTTER + space::S16))
+            .left_0()
+            .right_0()
+            .flex()
+            .justify_center()
+            .child(
+                mode_pill::track()
+                    .child(self.mode_segment(Mode::Photo, cx))
+                    .child(self.mode_segment(Mode::Video, cx)),
+            )
+    }
+
+    /// The pill segment that selects `target` when clicked.
+    fn mode_segment(&self, target: Mode, cx: &mut Context<Self>) -> impl IntoElement {
+        mode_pill::segment(
+            target,
+            self.state.mode,
+            self.previous_mode,
+            self.mode_switches,
+            cx.listener(move |this, _, _, cx| this.select_mode(target, cx)),
+        )
+    }
+
     /// The Shutter at the bottom center; clicking it takes a Photo.
     fn shutter(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let button = photo_ui::shutter(self.shutter_fill)

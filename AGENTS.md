@@ -14,9 +14,10 @@ Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agen
 
 ## Project rules
 
-- **Commits:** always via `/commit:commit`. Pick the mode that fits: commit only, commit + push, or new branch. Opening a PR requires commit + push.
-- **Worktrees:** off by default. Use only for genuinely parallel tasks or when one is logically required.
-- **`/mattpocock-skills:implement <ticket>`:** branch fresh from updated `main` as `<ticket-number>-<kebab-slug>` (e.g. `12-take-photo`), implement, then open a PR to `main`. Skip the PR only if told "do not open a PR".
-- **Scope:** smallest change that fully solves the task, with quality, like a lazy senior dev. Apply clean code practices adapted to Rust: small single-purpose functions, intention-revealing names, idiomatic types (`Option`/`Result` over sentinels, enums over flags, `?` over manual matching), no `unwrap`/`expect` in non-test code unless the invariant is documented, borrow before cloning, and no duplication or dead code. Keep `cargo clippy` and `cargo fmt` clean.
-- **Docs:** put a `///` comment above every fn/method saying what it does (e.g. `/// Greet the user`). Comment non-obvious parts of the code to ease review.
-- **No noise comments:** skip unnecessary or sloppy comments; every comment must add value.
+- **Commits:** always via `/commit:commit` (commit only, commit + push, or new branch; a PR requires push).
+- **Worktrees:** off by default; only for genuinely parallel or logically required tasks.
+- **`/mattpocock-skills:implement <ticket>`:** branch from updated `main` as `<ticket-number>-<kebab-slug>` (e.g. `12-take-photo`), implement, open a PR to `main` unless told "do not open a PR".
+- **Scope:** smallest change that fully solves the task, like a lazy senior dev. Rust: small single-purpose fns, intention-revealing names, idiomatic types (`Option`/`Result` over sentinels, enums over flags, `?` over manual matching), no `unwrap`/`expect` in non-test code unless the invariant is documented, borrow before cloning, no duplication or dead code. `cargo clippy` and `cargo fmt` clean.
+- **Docs:** `///` comment above every fn/method saying what it does (e.g. `/// Greet the user`); comment non-obvious code to ease review.
+- **Comments:** only those that add value; no noise.
+- **Ticket completion (strict):** when finishing a ticket, check off in its markdown file under `.scratch/<feature>/` only the checkboxes implemented correctly and verified, and append a final `## Implementation notes` section with a comment for each task not completed successfully or not at 100%: what was attempted, what happened (exact error or blocker), whether it is blocking or non-blocking, its urgency to fix (low, medium, high), what remains, and references (file paths with line numbers, commands, commit hashes). Do not add entries for fully completed tasks.

@@ -1,3 +1,4 @@
 {
-  "worktree": { "bgIsolation": "none" }
+  "worktree": { "bgIsolation": "none" },
+  "env": { "CARGO_BUILD_JOBS": "4" }
 }

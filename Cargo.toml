@@ -6,3 +6,11 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.104"
 gpui = "=0.2.2"
+
+# Lighter debug builds: less RAM/disk at link time, faster incremental rebuilds.
+# Our crate keeps file:line backtraces; dependencies (gpui, ~700 crates) get none.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false

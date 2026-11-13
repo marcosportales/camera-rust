@@ -1,3 +1,11 @@
+/// Where the Video being captured stands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VideoCapture {
+    Recording(Recording),
+    /// Stopped; its file is still being finalized.
+    Saving,
+}
+
 /// A Video being recorded.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Recording {

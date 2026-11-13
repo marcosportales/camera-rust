@@ -1,13 +1,16 @@
 //! Recording a Video: the encoder + container and the audio source behind traits, and the
 //! pipeline that turns the camera's MJPG frames plus audio into a file.
 
-use std::path::Path;
-use std::thread::{self, JoinHandle};
+use std::path::{Path, PathBuf};
+use std::thread;
 
 use anyhow::{Context, anyhow};
+use futures::channel::oneshot;
 use gstreamer as gst;
 use gstreamer::prelude::*;
 use gstreamer_app as gst_app;
+
+use crate::app_core::backend::{VideoError, VideoSaving};
 
 /// How long a stopped Video may take to finish writing its file.
 const FINALIZE_TIMEOUT: gst::ClockTime = gst::ClockTime::from_seconds(10);
@@ -88,7 +91,11 @@ impl Recorder {
             let _ = pipeline.set_state(gst::State::Null);
             return Err(error.into());
         }
-        Ok(VideoWriter { pipeline, input })
+        Ok(VideoWriter {
+            pipeline,
+            input,
+            path: path.to_path_buf(),
+        })
     }
 
     /// Build the pipeline: MJPG frames from an appsrc → encoder, audio → encoder, both into the muxer → file.
@@ -116,6 +123,7 @@ impl Recorder {
 pub struct VideoWriter {
     pipeline: gst::Pipeline,
     input: gst_app::AppSrc,
+    path: PathBuf,
 }
 
 impl VideoWriter {
@@ -124,34 +132,53 @@ impl VideoWriter {
         &self.input
     }
 
-    /// Send an end-of-stream through the pipeline so the muxer closes the file; a thread waits for it.
-    pub fn stop(self) -> JoinHandle<()> {
-        // A pipeline forwards EOS to every source, so both video and audio end.
-        self.pipeline.send_event(gst::event::Eos::new());
-        let pipeline = self.pipeline;
+    /// Send an end-of-stream through the pipeline so the muxer finishes the file; a thread waits for
+    /// it, closes the file, and resolves the returned [`VideoSaving`] with the outcome.
+    pub fn stop(self) -> VideoSaving {
+        let Self { pipeline, path, .. } = self;
+        let (finished, saving) = oneshot::channel();
         thread::spawn(move || {
-            wait_for_eos(&pipeline);
-            let _ = pipeline.set_state(gst::State::Null);
-        })
+            // Sending EOS can wait on source locks; keep it off the UI thread too.
+            // A pipeline forwards EOS to every source, so both video and audio end.
+            let eos = if pipeline.send_event(gst::event::Eos::new()) {
+                wait_for_eos(&pipeline)
+            } else {
+                Err(anyhow!("pipeline refused end-of-stream"))
+            };
+            // Close even after failure, and announce success only once the file is closed.
+            let finalized = eos.and(close(&pipeline));
+            let outcome = finalized.map(|()| path).map_err(|error| {
+                eprintln!("Could not finish the video: {error:#}");
+                VideoError
+            });
+            // The receiver is gone only if the window closed; nobody is left to tell.
+            let _ = finished.send(outcome);
+        });
+        saving
     }
 }
 
-/// Block until `pipeline` reports end-of-stream, an error, or the finalize timeout.
-fn wait_for_eos(pipeline: &gst::Pipeline) {
-    let Some(bus) = pipeline.bus() else {
-        return;
-    };
+/// Block until `pipeline` reports end-of-stream; an error (also one from while recording, e.g. a full
+/// disk) or the finalize timeout fails.
+fn wait_for_eos(pipeline: &gst::Pipeline) -> anyhow::Result<()> {
+    let bus = pipeline.bus().context("no bus")?;
     let message = bus.timed_pop_filtered(
         FINALIZE_TIMEOUT,
         &[gst::MessageType::Eos, gst::MessageType::Error],
     );
     match message.as_ref().map(|message| message.view()) {
-        Some(gst::MessageView::Eos(_)) => {}
-        Some(gst::MessageView::Error(error)) => {
-            eprintln!("Could not finish the video: {}", error.error());
-        }
-        _ => eprintln!("The video did not finish within {FINALIZE_TIMEOUT}"),
+        Some(gst::MessageView::Eos(_)) => Ok(()),
+        Some(gst::MessageView::Error(error)) => Err(error.error().into()),
+        _ => Err(anyhow!("no end-of-stream within {FINALIZE_TIMEOUT}")),
     }
+}
+
+/// Stop `pipeline`, which closes the file; the Video is complete only after this.
+fn close(pipeline: &gst::Pipeline) -> anyhow::Result<()> {
+    pipeline
+        .set_state(gst::State::Null)
+        .map(drop)
+        .context("could not close the file")
 }
 
 /// Push one MJPG frame from the camera into a VideoWriter's `input`.

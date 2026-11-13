@@ -1,4 +1,4 @@
-//! Visuals of recording a Video: the timecode pill and the Shutter's stop square.
+//! Visuals of recording a Video: the timecode pill, the Shutter's stop square and the saving label.
 
 use std::f32::consts::TAU;
 use std::sync::Arc;
@@ -81,6 +81,21 @@ pub fn stop_square(pressed: bool) -> impl IntoElement {
         .size(px(size::STOP))
         .rounded(px(radius::STOP))
         .bg(rgba(fill))
+}
+
+/// "Saving…" in `type.small`, centered `space.16` above the Shutter while a stopped Video is finalized.
+pub fn saving_label() -> impl IntoElement {
+    div()
+        .absolute()
+        .bottom(px(space::S24 + size::SHUTTER + space::S16))
+        .left_0()
+        .right_0()
+        .flex()
+        .justify_center()
+        .text_size(px(font::SMALL))
+        .font_weight(FontWeight::MEDIUM)
+        .text_color(rgba(color::TEXT_SECONDARY))
+        .child("Saving…")
 }
 
 #[cfg(test)]

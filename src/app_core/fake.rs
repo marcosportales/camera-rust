@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 
-use super::backend::{Camera, CameraBackend, CameraError, PhotoError, VideoError};
+use futures::channel::oneshot;
+
+use super::backend::{Camera, CameraBackend, CameraError, PhotoError, VideoError, VideoSaving};
 use super::resolution::Resolution;
 
 /// Scriptable stand-in for the real camera.
@@ -16,6 +18,8 @@ pub struct FakeCamera {
     pub video_folders: Vec<PathBuf>,
     /// How many times a Video was stopped.
     pub videos_stopped: usize,
+    /// Answers the last stopped Video once its end-of-stream is scripted to complete or fail.
+    eos: Option<oneshot::Sender<Result<PathBuf, VideoError>>>,
 }
 
 impl FakeCamera {
@@ -44,6 +48,29 @@ impl FakeCamera {
         self
     }
 
+    /// Script every Video to be written at `path`.
+    pub fn saving_video_as(mut self, path: &Path) -> Self {
+        self.video = Ok(path.to_path_buf());
+        self
+    }
+
+    /// Finish the stopped Video's end-of-stream: it is saved at the scripted path.
+    pub fn complete_eos(&mut self) {
+        self.answer_eos(self.video.clone());
+    }
+
+    /// Fail the stopped Video's end-of-stream, as a full disk or a pipeline error would.
+    pub fn fail_eos(&mut self) {
+        self.answer_eos(Err(VideoError));
+    }
+
+    /// Send `result` to whoever waits for the stopped Video.
+    fn answer_eos(&mut self, result: Result<PathBuf, VideoError>) {
+        if let Some(eos) = self.eos.take() {
+            let _ = eos.send(result);
+        }
+    }
+
     /// Script every Video to fail to start.
     pub fn failing_video(mut self) -> Self {
         self.video = Err(VideoError);
@@ -60,6 +87,7 @@ impl FakeCamera {
             video: Ok(PathBuf::from("video.mp4")),
             video_folders: Vec::new(),
             videos_stopped: 0,
+            eos: None,
         }
     }
 }
@@ -89,9 +117,12 @@ impl CameraBackend for FakeCamera {
         self.video.clone()
     }
 
-    /// Count the stop.
-    fn stop_video(&mut self) {
+    /// Count the stop; the end-of-stream waits until the test completes or fails it.
+    fn stop_video(&mut self) -> VideoSaving {
         self.videos_stopped += 1;
+        let (eos, saving) = oneshot::channel();
+        self.eos = Some(eos);
+        saving
     }
 }
 

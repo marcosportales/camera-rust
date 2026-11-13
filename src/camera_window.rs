@@ -13,7 +13,7 @@ use gpui::{
 };
 
 use crate::app_core::backend::CameraBackend;
-use crate::app_core::state::{AppState, CameraState, Event, Mode};
+use crate::app_core::state::{AppState, CameraState, Event, Mode, VideoCapture};
 use crate::feedback::{CaptureFeedback, ModeTransition};
 use crate::gst_camera::{Frame, GstCamera};
 use crate::gst_recording::{DefaultMicrophone, H264AacMp4, Recorder};
@@ -179,16 +179,19 @@ impl Render for CameraWindow {
             .child(scrim_bottom())
             .child(camera_label(SharedString::from(camera.name.clone())))
             .child(self.shutter(cx));
-        // While recording only the camera name, the timer and the Shutter are drawn.
-        if let Some(recording) = self.state.recording {
-            return root.child(recording_ui::timecode_pill(recording));
+        // While a Video records or saves, only the camera name, its status and the Shutter are drawn.
+        match self.state.video {
+            Some(VideoCapture::Recording(recording)) => {
+                root.child(recording_ui::timecode_pill(recording))
+            }
+            Some(VideoCapture::Saving) => root.child(recording_ui::saving_label()),
+            None => root.child(self.mode_pill(cx)).children(
+                self.feedback
+                    .toast
+                    .zip(self.state.last_capture.as_ref())
+                    .map(|(id, outcome)| photo_ui::toast(id, outcome)),
+            ),
         }
-        root.child(self.mode_pill(cx)).children(
-            self.feedback
-                .toast
-                .zip(self.state.photo.as_ref())
-                .map(|(id, outcome)| photo_ui::toast(id, outcome)),
-        )
     }
 }
 

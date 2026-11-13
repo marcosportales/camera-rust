@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
 
+use futures::channel::oneshot;
+
 use super::resolution::Resolution;
 
 /// A capture-capable camera and the MJPG Resolutions it supports.
@@ -24,9 +26,13 @@ pub enum CameraError {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhotoError;
 
-/// The Video could not be started.
+/// The Video could not be started or its file could not be finalized.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct VideoError;
+
+/// Resolves once a stopped Video's file is finalized (end-of-stream reached, file closed), with its
+/// path, or with the failure. A dropped sender means the finalizing side died: treat it as a failure.
+pub type VideoSaving = oneshot::Receiver<Result<PathBuf, VideoError>>;
 
 /// What the core needs from a camera; GStreamer implements it, tests use a fake.
 pub trait CameraBackend {
@@ -42,6 +48,6 @@ pub trait CameraBackend {
     /// Start recording a Video at the Viewfinder's Resolution into a new file in `folder`, returning its path.
     fn start_video(&mut self, folder: &Path) -> Result<PathBuf, VideoError>;
 
-    /// Stop the Video being recorded, closing its file with an end-of-stream.
-    fn stop_video(&mut self);
+    /// Stop the Video being recorded and close its file with an end-of-stream, in the background.
+    fn stop_video(&mut self) -> VideoSaving;
 }

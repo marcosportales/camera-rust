@@ -3,15 +3,17 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
-use std::thread::JoinHandle;
 
 use chrono::Local;
 use futures::channel::mpsc::Sender;
+use futures::channel::oneshot;
 use gstreamer as gst;
 use gstreamer::prelude::*;
 use gstreamer_app as gst_app;
 
-use crate::app_core::backend::{Camera, CameraBackend, CameraError, PhotoError, VideoError};
+use crate::app_core::backend::{
+    Camera, CameraBackend, CameraError, PhotoError, VideoError, VideoSaving,
+};
 use crate::app_core::resolution::Resolution;
 use crate::capture_store;
 use crate::gst_recording::{self, Recorder, VideoWriter};
@@ -56,8 +58,6 @@ pub struct GstCamera {
     jpeg: Arc<Mutex<JpegTap>>,
     recorder: Recorder,
     recording: Option<VideoWriter>,
-    /// The thread waiting for the last stopped Video to finish writing.
-    finalizing: Option<JoinHandle<()>>,
 }
 
 impl GstCamera {
@@ -70,7 +70,6 @@ impl GstCamera {
             jpeg: Arc::default(),
             recorder,
             recording: None,
-            finalizing: None,
         }
     }
 }
@@ -145,10 +144,12 @@ impl CameraBackend for GstCamera {
     }
 
     /// Stop feeding frames and end the Video; its file is finalized in the background.
-    fn stop_video(&mut self) {
+    fn stop_video(&mut self) -> VideoSaving {
         lock(&self.jpeg).recording = None;
-        if let Some(recording) = self.recording.take() {
-            self.finalizing = Some(recording.stop());
+        match self.recording.take() {
+            Some(recording) => recording.stop(),
+            // Nothing records: an already closed channel, which reads as a failure.
+            None => oneshot::channel().1,
         }
     }
 }
@@ -400,15 +401,42 @@ mod tests {
 
         let path = camera.start_video(folder.path()).unwrap();
         std::thread::sleep(Duration::from_secs(2));
-        camera.stop_video();
-        camera.finalizing.take().unwrap().join().unwrap();
+        let saved = futures::executor::block_on(camera.stop_video()).unwrap();
 
+        assert_eq!(saved, Ok(path.clone()));
         assert_eq!(path.extension().unwrap(), "mp4");
         let duration = prerolled_duration(&path);
         assert!(
             (Duration::from_millis(1500)..Duration::from_millis(3000)).contains(&duration),
             "duration {duration:?}"
         );
+    }
+
+    /// An audio source that fails during recording, like a device or write pipeline error.
+    struct FailingAudio;
+
+    impl AudioSource for FailingAudio {
+        /// Fail on the first audio buffer so stopping must never report a saved Video.
+        fn source(&self) -> &str {
+            "audiotestsrc is-live=true ! identity error-after=1"
+        }
+    }
+
+    /// A real pipeline error reaches the caller as a failed save instead of a successful path.
+    #[test]
+    fn test_source_video_reports_pipeline_failure_on_stop() {
+        gst::init().unwrap();
+        let (frames_tx, _frames_rx) = mpsc::channel(0);
+        let mut camera = GstCamera::new(frames_tx, Recorder::new(H264AacMp4, FailingAudio));
+        camera.source = Some("videotestsrc is-live=true ! jpegenc".into());
+        camera.start_viewfinder(res(640, 360)).unwrap();
+        let folder = tempfile::tempdir().unwrap();
+
+        camera.start_video(folder.path()).unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+        let saved = futures::executor::block_on(camera.stop_video()).unwrap();
+
+        assert_eq!(saved, Err(VideoError));
     }
 
     /// Demux `mp4` with one video and one audio branch; preroll succeeds only if both streams exist.

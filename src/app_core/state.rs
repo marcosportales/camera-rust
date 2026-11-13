@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use super::backend::{Camera, CameraBackend, CameraError, PhotoError};
-pub use super::recording::Recording;
+use super::backend::{Camera, CameraBackend, CameraError, PhotoError, VideoError, VideoSaving};
+pub use super::recording::{Recording, VideoCapture};
 use super::resolution::{Resolution, default_resolution};
 
 /// Whether the next Shutter press produces a Photo or a Video.
@@ -60,13 +60,19 @@ pub enum Event {
     /// One more second of the Video was recorded.
     RecordingTick,
     RecordingStopped,
+    /// The stopped Video's file was finalized.
+    VideoSaved(PathBuf),
+    /// The Video could not be started or finalized.
+    VideoFailed,
 }
 
-/// What became of the last Photo the user took.
+/// What became of the last Capture the user took.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PhotoOutcome {
-    Saved(PathBuf),
-    Failed,
+pub enum CaptureOutcome {
+    PhotoSaved(PathBuf),
+    PhotoFailed,
+    VideoSaved(PathBuf),
+    VideoFailed,
 }
 
 impl From<Result<Camera, CameraError>> for Event {
@@ -89,6 +95,16 @@ impl From<Result<PathBuf, PhotoError>> for Event {
     }
 }
 
+impl From<Result<PathBuf, VideoError>> for Event {
+    /// Turn a Video finalization result into the matching event.
+    fn from(video: Result<PathBuf, VideoError>) -> Self {
+        match video {
+            Ok(path) => Self::VideoSaved(path),
+            Err(VideoError) => Self::VideoFailed,
+        }
+    }
+}
+
 /// Everything the UI shows, changed only through [`AppState::handle`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppState {
@@ -97,8 +113,8 @@ pub struct AppState {
     pub mirror: bool,
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
-    pub photo: Option<PhotoOutcome>,
-    pub recording: Option<Recording>,
+    pub last_capture: Option<CaptureOutcome>,
+    pub video: Option<VideoCapture>,
 }
 
 impl AppState {
@@ -110,43 +126,60 @@ impl AppState {
             mirror: true,
             resolution: None,
             camera: CameraState::Detecting,
-            photo: None,
-            recording: None,
+            last_capture: None,
+            video: None,
         }
     }
 
-    /// Take a Photo into `folder` and record whether it was saved.
+    /// The Video being recorded, if one is (not while it is saving).
+    pub fn recording(&self) -> Option<Recording> {
+        match self.video {
+            Some(VideoCapture::Recording(recording)) => Some(recording),
+            _ => None,
+        }
+    }
+
+    /// Take a Photo into `folder` unless a Video is recording or saving, and record its outcome.
     pub fn take_photo(&mut self, camera: &mut impl CameraBackend, folder: &Path) {
+        if self.video.is_some() {
+            return;
+        }
         self.handle(camera.take_photo(folder).into());
     }
 
-    /// What the Shutter does: nothing until the camera is ready, then stop a recording in progress,
-    /// else act on the Mode.
+    /// What the Shutter does: nothing until the camera is ready or while a Video saves, then stop a
+    /// recording in progress, else act on the Mode.
     pub fn shutter_action(&self) -> Option<ShutterAction> {
         if !matches!(self.camera, CameraState::Ready(_)) {
             return None;
         }
-        Some(match (self.recording, self.mode) {
-            (Some(_), _) => ShutterAction::StopRecording,
-            (None, Mode::Photo) => ShutterAction::TakePhoto,
-            (None, Mode::Video) => ShutterAction::StartRecording,
-        })
+        match (self.video, self.mode) {
+            (Some(VideoCapture::Saving), _) => None,
+            (Some(VideoCapture::Recording(_)), _) => Some(ShutterAction::StopRecording),
+            (None, Mode::Photo) => Some(ShutterAction::TakePhoto),
+            (None, Mode::Video) => Some(ShutterAction::StartRecording),
+        }
     }
 
-    /// Start recording a Video into `folder`; a failure to start leaves the state idle.
+    /// Start a Video into `folder` unless one is recording or saving; report any start failure.
     pub fn start_recording(&mut self, camera: &mut impl CameraBackend, folder: &Path) {
-        // The write-failure notice is ticket 07; for now a failed start just stays idle.
-        if camera.start_video(folder).is_ok() {
-            self.handle(Event::RecordingStarted);
+        if self.video.is_some() {
+            return;
         }
+        let event = match camera.start_video(folder) {
+            Ok(_) => Event::RecordingStarted,
+            Err(VideoError) => Event::VideoFailed,
+        };
+        self.handle(event);
     }
 
-    /// Stop the Video being recorded; does nothing when not recording.
-    pub fn stop_recording(&mut self, camera: &mut impl CameraBackend) {
-        if self.recording.is_some() {
-            camera.stop_video();
-            self.handle(Event::RecordingStopped);
-        }
+    /// Stop the Video being recorded and start saving it; returns what resolves once it is finalized,
+    /// to be fed back as an event. Does nothing when not recording.
+    pub fn stop_recording(&mut self, camera: &mut impl CameraBackend) -> Option<VideoSaving> {
+        self.recording()?;
+        let saving = camera.stop_video();
+        self.handle(Event::RecordingStopped);
+        Some(saving)
     }
 
     /// Apply an event to the state.
@@ -157,21 +190,34 @@ impl AppState {
                 self.camera = CameraState::Ready(camera);
             }
             Event::CameraFailed(error) => self.camera = CameraState::Error(error),
-            // The Mode stays put while a Video records, so its Shutter look returns after the stop.
-            Event::SetMode(mode) if self.recording.is_none() => self.mode = mode,
+            // The Mode stays put while a Video records or saves, so its Shutter look returns after.
+            Event::SetMode(mode) if self.video.is_none() => self.mode = mode,
             Event::SetMode(_) => {}
             Event::CycleTimer => self.timer = self.timer.next(),
             Event::ToggleMirror => self.mirror = !self.mirror,
-            Event::PhotoSaved(path) => self.photo = Some(PhotoOutcome::Saved(path)),
-            Event::PhotoFailed => self.photo = Some(PhotoOutcome::Failed),
-            Event::RecordingStarted => self.recording = Some(Recording { elapsed_secs: 0 }),
+            Event::PhotoSaved(path) => self.last_capture = Some(CaptureOutcome::PhotoSaved(path)),
+            Event::PhotoFailed => self.last_capture = Some(CaptureOutcome::PhotoFailed),
+            Event::RecordingStarted => {
+                self.video = Some(VideoCapture::Recording(Recording { elapsed_secs: 0 }));
+            }
             Event::RecordingTick => {
-                if let Some(recording) = &mut self.recording {
+                if let Some(VideoCapture::Recording(recording)) = &mut self.video {
                     recording.elapsed_secs += 1;
                 }
             }
-            Event::RecordingStopped => self.recording = None,
+            Event::RecordingStopped if self.recording().is_some() => {
+                self.video = Some(VideoCapture::Saving);
+            }
+            Event::RecordingStopped => {}
+            Event::VideoSaved(path) => self.finish_video(CaptureOutcome::VideoSaved(path)),
+            Event::VideoFailed => self.finish_video(CaptureOutcome::VideoFailed),
         }
+    }
+
+    /// End the Video, whatever its phase, and record how it went.
+    fn finish_video(&mut self, outcome: CaptureOutcome) {
+        self.video = None;
+        self.last_capture = Some(outcome);
     }
 }
 
@@ -201,7 +247,7 @@ mod tests {
         assert!(state.mirror);
         assert_eq!(state.resolution, None);
         assert_eq!(state.camera, CameraState::Detecting);
-        assert_eq!(state.photo, None);
+        assert_eq!(state.last_capture, None);
     }
 
     #[test]
@@ -287,7 +333,7 @@ mod tests {
         let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]).saving_photo_as(&path);
         let mut state = AppState::new();
         state.take_photo(&mut camera, Path::new("/pics/Camera"));
-        assert_eq!(state.photo, Some(PhotoOutcome::Saved(path)));
+        assert_eq!(state.last_capture, Some(CaptureOutcome::PhotoSaved(path)));
         assert_eq!(camera.photo_folders, [PathBuf::from("/pics/Camera")]);
     }
 
@@ -296,7 +342,7 @@ mod tests {
         let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]).failing_photo();
         let mut state = AppState::new();
         state.take_photo(&mut camera, Path::new("/pics/Camera"));
-        assert_eq!(state.photo, Some(PhotoOutcome::Failed));
+        assert_eq!(state.last_capture, Some(CaptureOutcome::PhotoFailed));
     }
 
     #[test]
@@ -334,28 +380,103 @@ mod tests {
         let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
         let mut state = video_state();
         state.start_recording(&mut camera, Path::new("/videos/Camera"));
-        assert_eq!(state.recording, Some(Recording { elapsed_secs: 0 }));
+        assert_eq!(state.recording(), Some(Recording { elapsed_secs: 0 }));
         assert_eq!(camera.video_folders, [PathBuf::from("/videos/Camera")]);
         assert_eq!(state.shutter_action(), Some(ShutterAction::StopRecording));
     }
 
+    /// A failed Video start produces failure feedback and leaves the Shutter ready to retry.
     #[test]
-    fn a_recording_that_fails_to_start_leaves_the_state_idle() {
+    fn a_recording_that_fails_to_start_stays_idle_and_reports_the_failure() {
         let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]).failing_video();
         let mut state = video_state();
         state.start_recording(&mut camera, Path::new("/videos/Camera"));
-        assert_eq!(state.recording, None);
+        assert_eq!(state.video, None);
+        assert_eq!(state.last_capture, Some(CaptureOutcome::VideoFailed));
     }
 
+    /// Stopping ends the recording phase and asks the backend to finalize once.
     #[test]
-    fn stopping_tells_the_backend_and_returns_to_the_video_shutter() {
+    fn stopping_tells_the_backend_and_ends_the_recording() {
         let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
         let mut state = video_state();
         state.start_recording(&mut camera, Path::new("/videos/Camera"));
         state.stop_recording(&mut camera);
-        assert_eq!(state.recording, None);
+        assert_eq!(state.recording(), None);
         assert_eq!(camera.videos_stopped, 1);
+    }
+
+    /// A delayed EOS keeps the Video saving without success feedback until completion.
+    #[test]
+    fn a_stopped_video_is_saving_until_eos_completes_then_saved() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)])
+            .saving_video_as(Path::new("/videos/Camera/a.mp4"));
+        let mut state = video_state();
+        state.start_recording(&mut camera, Path::new("/videos/Camera"));
+        let mut saving = state.stop_recording(&mut camera).unwrap();
+        assert_eq!(state.video, Some(VideoCapture::Saving));
+        assert_eq!(saving.try_recv(), Ok(None), "EOS has not completed yet");
+        assert_eq!(state.last_capture, None);
+        camera.complete_eos();
+        state.handle(saving.try_recv().unwrap().unwrap().into());
+        assert_eq!(state.video, None);
+        assert_eq!(
+            state.last_capture,
+            Some(CaptureOutcome::VideoSaved(PathBuf::from(
+                "/videos/Camera/a.mp4"
+            )))
+        );
         assert_eq!(state.shutter_action(), Some(ShutterAction::StartRecording));
+    }
+
+    /// A Video Mode state whose Video was recorded and stopped, with the fake waiting on its EOS.
+    fn saving_state(camera: &mut FakeCamera) -> (AppState, VideoSaving) {
+        let mut state = video_state();
+        state.start_recording(camera, Path::new("/videos/Camera"));
+        let saving = state.stop_recording(camera).unwrap();
+        (state, saving)
+    }
+
+    /// Failed finalization produces failure feedback and restores the Video Shutter.
+    #[test]
+    fn a_failed_eos_reports_the_failure_and_returns_to_the_video_shutter() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let (mut state, mut saving) = saving_state(&mut camera);
+        camera.fail_eos();
+        state.handle(saving.try_recv().unwrap().unwrap().into());
+        assert_eq!(state.video, None);
+        assert_eq!(state.last_capture, Some(CaptureOutcome::VideoFailed));
+        assert_eq!(state.shutter_action(), Some(ShutterAction::StartRecording));
+    }
+
+    /// Shutter presses, repeated stops and Mode changes cannot interrupt saving.
+    #[test]
+    fn the_shutter_and_mode_are_ignored_while_saving() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let (mut state, _saving) = saving_state(&mut camera);
+        assert_eq!(state.shutter_action(), None);
+        state.handle(Event::SetMode(Mode::Photo));
+        assert_eq!(state.mode, Mode::Video);
+        assert!(state.stop_recording(&mut camera).is_none());
+        assert_eq!(camera.videos_stopped, 1);
+        assert_eq!(state.video, Some(VideoCapture::Saving));
+    }
+
+    /// Neither capture entry point may replace the Video while its EOS is pending.
+    #[test]
+    fn capture_requests_are_ignored_while_saving() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let (mut state, mut saving) = saving_state(&mut camera);
+        let before = state.clone();
+
+        state.take_photo(&mut camera, Path::new("/pics/Camera"));
+        state.start_recording(&mut camera, Path::new("/videos/Camera"));
+        state.handle(Event::RecordingTick);
+
+        assert_eq!(state, before);
+        assert!(camera.photo_folders.is_empty());
+        assert_eq!(camera.video_folders.len(), 1);
+        assert_eq!(saving.try_recv(), Ok(None));
     }
 
     #[test]
@@ -366,7 +487,7 @@ mod tests {
         for _ in 0..3 {
             state.handle(Event::RecordingTick);
         }
-        assert_eq!(state.recording, Some(Recording { elapsed_secs: 3 }));
+        assert_eq!(state.recording(), Some(Recording { elapsed_secs: 3 }));
     }
 
     #[test]

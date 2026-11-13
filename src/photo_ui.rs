@@ -7,7 +7,7 @@ use gpui::{
     div, point, prelude::*, px, rgba, svg,
 };
 
-use crate::app_core::state::{Mode, PhotoOutcome};
+use crate::app_core::state::{CaptureOutcome, Mode};
 use crate::capture_store::display_folder;
 use crate::theme::{color, font, motion, radius, size, space};
 
@@ -61,15 +61,19 @@ pub fn flash(id: u64) -> impl IntoElement {
         )
 }
 
-/// The pill at the top center telling the user how the last Photo went. A new `id` restarts its fade.
-pub fn toast(id: u64, outcome: &PhotoOutcome) -> impl IntoElement {
+/// The pill at the top center telling the user how the last Capture went. A new `id` restarts its fade.
+pub fn toast(id: u64, outcome: &CaptureOutcome) -> impl IntoElement {
+    const SAVED: &str = "icons/check.svg";
+    const FAILED: &str = "icons/x.svg";
     let (icon, text, folder) = match outcome {
-        PhotoOutcome::Saved(path) => (
-            "icons/check.svg",
-            "Photo saved",
-            path.parent().map(display_folder),
-        ),
-        PhotoOutcome::Failed => ("icons/x.svg", "Couldn't save photo", None),
+        CaptureOutcome::PhotoSaved(path) => {
+            (SAVED, "Photo saved", path.parent().map(display_folder))
+        }
+        CaptureOutcome::VideoSaved(path) => {
+            (SAVED, "Video saved", path.parent().map(display_folder))
+        }
+        CaptureOutcome::PhotoFailed => (FAILED, "Couldn't save photo", None),
+        CaptureOutcome::VideoFailed => (FAILED, "Couldn't save video", None),
     };
     let pill = div()
         .h(px(size::STATUS))
@@ -236,6 +240,15 @@ pub fn shutter(center: impl IntoElement) -> Stateful<Div> {
         .items_center()
         .justify_center()
         .child(center)
+}
+
+/// The Shutter greyed out with `color::TEXT_DISABLED`, while it cannot be used.
+pub fn disabled_shutter() -> Stateful<Div> {
+    let fill = div()
+        .size(px(size::SHUTTER_FILL))
+        .rounded_full()
+        .bg(rgba(color::TEXT_DISABLED));
+    shutter(fill).border_color(rgba(color::TEXT_DISABLED))
 }
 
 #[cfg(test)]

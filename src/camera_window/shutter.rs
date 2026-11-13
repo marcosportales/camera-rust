@@ -1,11 +1,13 @@
 //! The Shutter of the Camera window: what pressing it does and how it looks.
 
+use std::path::PathBuf;
 use std::time::Duration;
 
 use gpui::{Context, IntoElement, MouseButton, div, prelude::*, px};
 
 use super::{CameraWindow, after};
-use crate::app_core::state::{Event, PhotoOutcome, ShutterAction};
+use crate::app_core::backend::VideoError;
+use crate::app_core::state::{CaptureOutcome, Event, ShutterAction, VideoCapture};
 use crate::capture_store::{photos_folder, videos_folder};
 use crate::photo_ui::{self, FLASH_DURATION, ShutterFill, ShutterLook, TOAST_DURATION};
 use crate::recording_ui;
@@ -28,24 +30,33 @@ impl CameraWindow {
     /// Take a Photo; once it is written, flash and toast the outcome. A failure only toasts.
     fn take_photo(&mut self, cx: &mut Context<Self>) {
         self.state.take_photo(&mut self.camera, &photos_folder());
-        let saved = matches!(self.state.photo, Some(PhotoOutcome::Saved(_)));
-        let id = self.feedback.begin(saved);
+        let saved = matches!(self.state.last_capture, Some(CaptureOutcome::PhotoSaved(_)));
+        let id = self.show_feedback(saved, cx);
         if saved {
             after(cx, FLASH_DURATION, move |view, cx| view.end_flash(id, cx));
         }
+        self.update_shutter_fill(cx);
+    }
+
+    /// Toast the last Capture's outcome, with a flash if `flash`, and remove the toast once it has
+    /// played; returns the feedback's id.
+    fn show_feedback(&mut self, flash: bool, cx: &mut Context<Self>) -> u64 {
+        let id = self.feedback.begin(flash);
         after(cx, TOAST_DURATION, move |view, cx| {
             if view.feedback.end_toast(id) {
                 cx.notify();
             }
         });
-        self.update_shutter_fill(cx);
+        id
     }
 
-    /// Start a Video and advance its elapsed time every second until it stops.
+    /// Start a Video and advance its elapsed time every second until it stops; a failed start toasts.
     fn start_recording(&mut self, cx: &mut Context<Self>) {
         self.state
             .start_recording(&mut self.camera, &videos_folder());
-        if self.state.recording.is_some() {
+        if self.state.recording().is_none() {
+            self.show_feedback(false, cx);
+        } else {
             self.recording_clock = Some(cx.spawn(async move |this, cx| {
                 loop {
                     cx.background_executor().timer(TICK).await;
@@ -62,10 +73,25 @@ impl CameraWindow {
         cx.notify();
     }
 
-    /// Stop the Video and its ticking; the Shutter returns to its Video Mode look.
+    /// Stop the Video and its ticking, then wait in the background until its file is finalized.
     fn stop_recording(&mut self, cx: &mut Context<Self>) {
-        self.state.stop_recording(&mut self.camera);
+        let saving = self.state.stop_recording(&mut self.camera);
         self.recording_clock = None;
+        if let Some(saving) = saving {
+            cx.spawn(async move |this, cx| {
+                // A dropped sender means the finalizing thread died: the Video is not saved.
+                let outcome = saving.await.unwrap_or(Err(VideoError));
+                let _ = this.update(cx, |view, cx| view.finish_saving(outcome, cx));
+            })
+            .detach();
+        }
+        cx.notify();
+    }
+
+    /// The stopped Video is finalized (or failed): toast it; the Shutter returns to its Video Mode look.
+    fn finish_saving(&mut self, outcome: Result<PathBuf, VideoError>, cx: &mut Context<Self>) {
+        self.state.handle(outcome.into());
+        self.show_feedback(false, cx);
         cx.notify();
     }
 
@@ -97,10 +123,14 @@ impl CameraWindow {
         cx.notify();
     }
 
-    /// The Shutter at the bottom center: a stop square while recording, else the Mode's fill.
+    /// The Shutter at the bottom center: a stop square while recording, greyed out while saving, else
+    /// the Mode's fill.
     pub(super) fn shutter(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let button = match self.state.recording {
-            Some(_) => photo_ui::shutter(recording_ui::stop_square(self.shutter_pressed)),
+        let button = match self.state.video {
+            Some(VideoCapture::Recording(_)) => {
+                photo_ui::shutter(recording_ui::stop_square(self.shutter_pressed))
+            }
+            Some(VideoCapture::Saving) => photo_ui::disabled_shutter(),
             None => photo_ui::shutter(photo_ui::shutter_fill(self.shutter_fill)),
         };
         let button = button

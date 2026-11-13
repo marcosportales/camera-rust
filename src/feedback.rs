@@ -1,34 +1,34 @@
-//! Bookkeeping of the transient feedback of the Camera window: the Photo flash and toast, and the Mode switch.
+//! Bookkeeping of the transient feedback of the Camera window: the Photo flash, the Capture toast, and the Mode switch.
 
 use crate::app_core::state::Mode;
 
-/// Which flash and toast are on screen. Ids grow with every Photo, so each one restarts its animation.
+/// Which flash and toast are on screen. Ids grow with every Capture, so each one restarts its animation.
 #[derive(Debug, Default)]
 pub struct CaptureFeedback {
     pub flash: Option<u64>,
-    /// The toast's text comes from `AppState::photo`.
+    /// The toast's text comes from `AppState::last_capture`.
     pub toast: Option<u64>,
-    photos_taken: u64,
+    captures: u64,
 }
 
 impl CaptureFeedback {
-    /// Show the toast (and the flash, if the Photo was `saved`) of a new Photo; returns its id.
-    pub fn begin(&mut self, saved: bool) -> u64 {
-        self.photos_taken += 1;
-        let id = self.photos_taken;
-        if saved {
+    /// Show the toast (and the flash, if `flash`) of a new Capture; returns its id.
+    pub fn begin(&mut self, flash: bool) -> u64 {
+        self.captures += 1;
+        let id = self.captures;
+        if flash {
             self.flash = Some(id);
         }
         self.toast = Some(id);
         id
     }
 
-    /// Remove flash `id`, unless a newer Photo has replaced it; returns whether it was removed.
+    /// Remove flash `id`, unless a newer Capture has replaced it; returns whether it was removed.
     pub fn end_flash(&mut self, id: u64) -> bool {
         Self::end(&mut self.flash, id)
     }
 
-    /// Remove toast `id`, unless a newer Photo has replaced it; returns whether it was removed.
+    /// Remove toast `id`, unless a newer Capture has replaced it; returns whether it was removed.
     pub fn end_toast(&mut self, id: u64) -> bool {
         Self::end(&mut self.toast, id)
     }

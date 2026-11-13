@@ -24,6 +24,10 @@ pub enum CameraError {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhotoError;
 
+/// The Video could not be started.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct VideoError;
+
 /// What the core needs from a camera; GStreamer implements it, tests use a fake.
 pub trait CameraBackend {
     /// Find the first capture-capable camera.
@@ -34,4 +38,10 @@ pub trait CameraBackend {
 
     /// Save the current Viewfinder frame as a JPEG in `folder`, returning the file's path.
     fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError>;
+
+    /// Start recording a Video at the Viewfinder's Resolution into a new file in `folder`, returning its path.
+    fn start_video(&mut self, folder: &Path) -> Result<PathBuf, VideoError>;
+
+    /// Stop the Video being recorded, closing its file with an end-of-stream.
+    fn stop_video(&mut self);
 }

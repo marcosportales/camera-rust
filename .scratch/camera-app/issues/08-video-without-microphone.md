@@ -8,10 +8,12 @@
 
 **Design reference:** none (no UI change).
 
-- [ ] The audio source trait reports whether a usable default input exists before recording starts.
-- [ ] If no usable audio input exists, recording starts and the MP4 contains only a video stream. No toast, no label, no error state.
-- [ ] If the audio source fails while recording, the recording continues video-only. No toast, no label.
-- [ ] Core tests with the fake audio source: available → audio recorded; unavailable → recording starts and completes normally.
-- [ ] Integration test: with the audio source forced unavailable, the output MP4 has exactly one video stream and no audio stream.
+- [x] The audio source trait reports whether a usable default input exists before recording starts.
+- [x] If no usable audio input exists, recording starts and the MP4 contains only a video stream. No toast, no label, no error state.
+- [x] If the audio source fails while recording, the recording continues video-only. No toast, no label.
+- [x] Core tests with the fake audio source: available → audio recorded; unavailable → recording starts and completes normally.
+- [x] Integration test: with the audio source forced unavailable, the output MP4 has exactly one video stream and no audio stream.
 
 **Out of this ticket:** Choosing or listing microphones.
+
+## Implementation notes

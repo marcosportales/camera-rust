@@ -226,7 +226,7 @@ fn tap_jpeg(pipeline: &gst::Pipeline, tap: Arc<Mutex<JpegTap>>) -> Result<(), Ca
             let sample = sink.pull_sample().map_err(|_| gst::FlowError::Eos)?;
             let mut tap = lock(&tap);
             if let Some(input) = &tap.recording {
-                gst_recording::push_frame(input, &sample);
+                gst_recording::push_sample(input, &sample);
             }
             // Cloning a buffer shares its memory, so keeping it costs no copy.
             tap.latest = sample.buffer_owned();
@@ -294,26 +294,15 @@ fn fixed_size(structure: &gst::StructureRef) -> Option<Resolution> {
 }
 
 #[cfg(test)]
+#[path = "gst_camera/recording_tests.rs"]
+mod recording_tests;
+
+#[cfg(test)]
 mod tests {
+    use super::recording_tests::test_recorder;
     use super::*;
-    use crate::gst_recording::{AudioSource, H264AacMp4};
     use futures::channel::mpsc;
     use std::time::{Duration, Instant};
-
-    /// A sine tone standing in for the microphone.
-    struct TestTone;
-
-    impl AudioSource for TestTone {
-        /// A live test tone, timed like a real microphone.
-        fn source(&self) -> &str {
-            "audiotestsrc is-live=true"
-        }
-    }
-
-    /// The real Video format with a test tone instead of the microphone.
-    fn test_recorder() -> Recorder {
-        Recorder::new(H264AacMp4, TestTone)
-    }
 
     /// Shorthand for building a Resolution in tests.
     fn res(width: u32, height: u32) -> Resolution {
@@ -378,82 +367,5 @@ mod tests {
         let decoded = image::open(&path).unwrap();
         assert_eq!((decoded.width(), decoded.height()), (640, 360));
         assert_eq!(path.extension().unwrap(), "jpg");
-    }
-
-    /// The real backend records 2 s from `videotestsrc` + `audiotestsrc` into an MP4 that demuxes
-    /// into a video and an audio stream. Skipped when an encoder or the muxer is missing.
-    #[test]
-    fn test_source_video_is_a_playable_mp4_with_video_and_audio() {
-        gst::init().unwrap();
-        let required = ["openh264enc", "avenc_aac", "mp4mux"];
-        if let Some(missing) = required
-            .iter()
-            .find(|name| gst::ElementFactory::find(name).is_none())
-        {
-            eprintln!("skipped: GStreamer element {missing} is not installed");
-            return;
-        }
-        let (frames_tx, _frames_rx) = mpsc::channel(0);
-        let mut camera = GstCamera::new(frames_tx, test_recorder());
-        camera.source = Some("videotestsrc is-live=true ! jpegenc".into());
-        camera.start_viewfinder(res(640, 360)).unwrap();
-        let folder = tempfile::tempdir().unwrap();
-
-        let path = camera.start_video(folder.path()).unwrap();
-        std::thread::sleep(Duration::from_secs(2));
-        let saved = futures::executor::block_on(camera.stop_video()).unwrap();
-
-        assert_eq!(saved, Ok(path.clone()));
-        assert_eq!(path.extension().unwrap(), "mp4");
-        let duration = prerolled_duration(&path);
-        assert!(
-            (Duration::from_millis(1500)..Duration::from_millis(3000)).contains(&duration),
-            "duration {duration:?}"
-        );
-    }
-
-    /// An audio source that fails during recording, like a device or write pipeline error.
-    struct FailingAudio;
-
-    impl AudioSource for FailingAudio {
-        /// Fail on the first audio buffer so stopping must never report a saved Video.
-        fn source(&self) -> &str {
-            "audiotestsrc is-live=true ! identity error-after=1"
-        }
-    }
-
-    /// A real pipeline error reaches the caller as a failed save instead of a successful path.
-    #[test]
-    fn test_source_video_reports_pipeline_failure_on_stop() {
-        gst::init().unwrap();
-        let (frames_tx, _frames_rx) = mpsc::channel(0);
-        let mut camera = GstCamera::new(frames_tx, Recorder::new(H264AacMp4, FailingAudio));
-        camera.source = Some("videotestsrc is-live=true ! jpegenc".into());
-        camera.start_viewfinder(res(640, 360)).unwrap();
-        let folder = tempfile::tempdir().unwrap();
-
-        camera.start_video(folder.path()).unwrap();
-        std::thread::sleep(Duration::from_millis(100));
-        let saved = futures::executor::block_on(camera.stop_video()).unwrap();
-
-        assert_eq!(saved, Err(VideoError));
-    }
-
-    /// Demux `mp4` with one video and one audio branch; preroll succeeds only if both streams exist.
-    /// Returns the file's duration.
-    fn prerolled_duration(mp4: &Path) -> Duration {
-        let description = format!(
-            "filesrc location={} ! qtdemux name=demux \
-             demux.video_0 ! queue ! h264parse ! fakesink \
-             demux.audio_0 ! queue ! aacparse ! fakesink",
-            mp4.display()
-        );
-        let pipeline = gst::parse::launch(&description).unwrap();
-        pipeline.set_state(gst::State::Paused).unwrap();
-        let (prerolled, _, _) = pipeline.state(gst::ClockTime::from_seconds(5));
-        let duration = pipeline.query_duration::<gst::ClockTime>();
-        pipeline.set_state(gst::State::Null).unwrap();
-        assert!(prerolled.is_ok(), "the MP4 did not preroll: {prerolled:?}");
-        Duration::from_nanos(duration.unwrap().nseconds())
     }
 }

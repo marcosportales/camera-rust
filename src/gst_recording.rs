@@ -12,6 +12,10 @@ use gstreamer_app as gst_app;
 
 use crate::app_core::backend::{VideoError, VideoSaving};
 
+mod audio;
+use audio::AudioCapture;
+pub use audio::{AudioSource, DefaultMicrophone};
+
 /// How long a stopped Video may take to finish writing its file.
 const FINALIZE_TIMEOUT: gst::ClockTime = gst::ClockTime::from_seconds(10);
 
@@ -45,22 +49,6 @@ impl VideoFormat for H264AacMp4 {
     }
 }
 
-/// Where the Video's sound comes from, as a `gst-launch` fragment producing raw audio.
-pub trait AudioSource: Send {
-    /// The fragment producing raw audio.
-    fn source(&self) -> &str;
-}
-
-/// The system default microphone, through PulseAudio (or PipeWire's Pulse server).
-pub struct DefaultMicrophone;
-
-impl AudioSource for DefaultMicrophone {
-    /// `pulsesrc` on its default device.
-    fn source(&self) -> &str {
-        "pulsesrc"
-    }
-}
-
 /// Starts Videos with a given format and audio source.
 pub struct Recorder {
     format: Box<dyn VideoFormat>,
@@ -78,7 +66,12 @@ impl Recorder {
 
     /// Start a Video written to `path`; its frames are pushed into [`VideoWriter::input`].
     pub fn start(&self, path: &Path) -> anyhow::Result<VideoWriter> {
-        let pipeline = self.pipeline()?;
+        let audio = self
+            .audio
+            .is_available()
+            .then(|| AudioCapture::start(self.audio.source()).ok())
+            .flatten();
+        let pipeline = self.pipeline(audio.is_some())?;
         pipeline
             .by_name("file")
             .context("no filesink")?
@@ -91,26 +84,40 @@ impl Recorder {
             let _ = pipeline.set_state(gst::State::Null);
             return Err(error.into());
         }
+        if let Some(audio) = &audio
+            && let Err(error) = audio.forward_to(&pipeline)
+        {
+            let _ = pipeline.set_state(gst::State::Null);
+            return Err(error);
+        }
         Ok(VideoWriter {
             pipeline,
             input,
             path: path.to_path_buf(),
+            audio,
         })
     }
 
-    /// Build the pipeline: MJPG frames from an appsrc → encoder, audio → encoder, both into the muxer → file.
-    fn pipeline(&self) -> anyhow::Result<gst::Pipeline> {
+    /// Build the writer with a video input and, when available, an independent audio input.
+    fn pipeline(&self, with_audio: bool) -> anyhow::Result<gst::Pipeline> {
         let (video, audio_encoder, muxer) = (
             self.format.video_encoder(),
             self.format.audio_encoder(),
             self.format.muxer(),
         );
-        let audio = self.audio.source();
+        let audio = if with_audio {
+            format!(
+                "appsrc name=audio is-live=true do-timestamp=true format=time \
+                ! queue ! audioconvert ! audioresample ! {audio_encoder} ! queue ! mux."
+            )
+        } else {
+            String::new()
+        };
         // The appsrc stamps each frame with the pipeline clock on arrival, so video and audio share a timeline.
         let description = format!(
             "appsrc name=video is-live=true do-timestamp=true format=time \
              ! queue ! jpegdec ! videoconvert ! {video} ! queue ! mux. \
-             {audio} ! queue ! audioconvert ! audioresample ! {audio_encoder} ! queue ! mux. \
+             {audio} \
              {muxer} name=mux ! filesink name=file"
         );
         gst::parse::launch(&description)?
@@ -124,10 +131,11 @@ pub struct VideoWriter {
     pipeline: gst::Pipeline,
     input: gst_app::AppSrc,
     path: PathBuf,
+    audio: Option<AudioCapture>,
 }
 
 impl VideoWriter {
-    /// Where the camera's MJPG frames go; feed it with [`push_frame`].
+    /// Where the camera's MJPG frames go; feed it with [`push_sample`].
     pub fn input(&self) -> &gst_app::AppSrc {
         &self.input
     }
@@ -135,9 +143,16 @@ impl VideoWriter {
     /// Send an end-of-stream through the pipeline so the muxer finishes the file; a thread waits for
     /// it, closes the file, and resolves the returned [`VideoSaving`] with the outcome.
     pub fn stop(self) -> VideoSaving {
-        let Self { pipeline, path, .. } = self;
+        let Self {
+            pipeline,
+            path,
+            audio,
+            ..
+        } = self;
         let (finished, saving) = oneshot::channel();
         thread::spawn(move || {
+            // Stop the microphone before ending both writer inputs, so it cannot enqueue more audio.
+            drop(audio);
             // Sending EOS can wait on source locks; keep it off the UI thread too.
             // A pipeline forwards EOS to every source, so both video and audio end.
             let eos = if pipeline.send_event(gst::event::Eos::new()) {
@@ -181,8 +196,8 @@ fn close(pipeline: &gst::Pipeline) -> anyhow::Result<()> {
         .context("could not close the file")
 }
 
-/// Push one MJPG frame from the camera into a VideoWriter's `input`.
-pub fn push_frame(input: &gst_app::AppSrc, sample: &gst::Sample) {
+/// Push a captured audio or MJPG sample into the writer, using its shared timeline.
+pub fn push_sample(input: &gst_app::AppSrc, sample: &gst::Sample) {
     let Some(buffer) = sample.buffer() else {
         return;
     };

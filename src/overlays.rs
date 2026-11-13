@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use gpui::{
-    FontWeight, IntoElement, ObjectFit, RenderImage, SharedString, div, img, linear_color_stop,
-    linear_gradient, prelude::*, px, rgba, svg,
+    BoxShadow, FontWeight, IntoElement, ObjectFit, RenderImage, SharedString, div, img,
+    linear_color_stop, linear_gradient, point, prelude::*, px, rgba, svg,
 };
 
 use crate::theme::{color, font, size, space};
@@ -66,4 +66,14 @@ pub fn camera_label(name: SharedString) -> impl IntoElement {
                 .text_color(text_color),
         )
         .child(name)
+}
+
+/// `shadow.control`: the soft shadow under floating controls.
+pub fn shadow_control() -> Vec<BoxShadow> {
+    vec![BoxShadow {
+        color: rgba(color::SHADOW_CONTROL).into(),
+        offset: point(px(0.0), px(2.0)),
+        blur_radius: px(8.0),
+        spread_radius: px(0.0),
+    }]
 }

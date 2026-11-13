@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use super::backend::{Camera, CameraBackend, CameraError, PhotoError};
+pub use super::recording::Recording;
 use super::resolution::{Resolution, default_resolution};
 
 /// Whether the next Shutter press produces a Photo or a Video.
@@ -29,6 +30,14 @@ impl Timer {
     }
 }
 
+/// What pressing the Shutter does now.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShutterAction {
+    TakePhoto,
+    StartRecording,
+    StopRecording,
+}
+
 /// Where camera detection stands.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CameraState {
@@ -47,6 +56,10 @@ pub enum Event {
     ToggleMirror,
     PhotoSaved(PathBuf),
     PhotoFailed,
+    RecordingStarted,
+    /// One more second of the Video was recorded.
+    RecordingTick,
+    RecordingStopped,
 }
 
 /// What became of the last Photo the user took.
@@ -85,6 +98,7 @@ pub struct AppState {
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
     pub photo: Option<PhotoOutcome>,
+    pub recording: Option<Recording>,
 }
 
 impl AppState {
@@ -97,12 +111,42 @@ impl AppState {
             resolution: None,
             camera: CameraState::Detecting,
             photo: None,
+            recording: None,
         }
     }
 
     /// Take a Photo into `folder` and record whether it was saved.
     pub fn take_photo(&mut self, camera: &mut impl CameraBackend, folder: &Path) {
         self.handle(camera.take_photo(folder).into());
+    }
+
+    /// What the Shutter does: nothing until the camera is ready, then stop a recording in progress,
+    /// else act on the Mode.
+    pub fn shutter_action(&self) -> Option<ShutterAction> {
+        if !matches!(self.camera, CameraState::Ready(_)) {
+            return None;
+        }
+        Some(match (self.recording, self.mode) {
+            (Some(_), _) => ShutterAction::StopRecording,
+            (None, Mode::Photo) => ShutterAction::TakePhoto,
+            (None, Mode::Video) => ShutterAction::StartRecording,
+        })
+    }
+
+    /// Start recording a Video into `folder`; a failure to start leaves the state idle.
+    pub fn start_recording(&mut self, camera: &mut impl CameraBackend, folder: &Path) {
+        // The write-failure notice is ticket 07; for now a failed start just stays idle.
+        if camera.start_video(folder).is_ok() {
+            self.handle(Event::RecordingStarted);
+        }
+    }
+
+    /// Stop the Video being recorded; does nothing when not recording.
+    pub fn stop_recording(&mut self, camera: &mut impl CameraBackend) {
+        if self.recording.is_some() {
+            camera.stop_video();
+            self.handle(Event::RecordingStopped);
+        }
     }
 
     /// Apply an event to the state.
@@ -113,11 +157,20 @@ impl AppState {
                 self.camera = CameraState::Ready(camera);
             }
             Event::CameraFailed(error) => self.camera = CameraState::Error(error),
-            Event::SetMode(mode) => self.mode = mode,
+            // The Mode stays put while a Video records, so its Shutter look returns after the stop.
+            Event::SetMode(mode) if self.recording.is_none() => self.mode = mode,
+            Event::SetMode(_) => {}
             Event::CycleTimer => self.timer = self.timer.next(),
             Event::ToggleMirror => self.mirror = !self.mirror,
             Event::PhotoSaved(path) => self.photo = Some(PhotoOutcome::Saved(path)),
             Event::PhotoFailed => self.photo = Some(PhotoOutcome::Failed),
+            Event::RecordingStarted => self.recording = Some(Recording { elapsed_secs: 0 }),
+            Event::RecordingTick => {
+                if let Some(recording) = &mut self.recording {
+                    recording.elapsed_secs += 1;
+                }
+            }
+            Event::RecordingStopped => self.recording = None,
         }
     }
 }
@@ -254,5 +307,94 @@ mod tests {
             state.take_photo(&mut camera, Path::new("/pics/Camera"));
         }
         assert_eq!(camera.photo_folders.len(), 3);
+    }
+
+    /// A state with a ready camera in Video Mode.
+    fn video_state() -> AppState {
+        let mut state = state_after_detecting(FakeCamera::ready("Cam", vec![res(1280, 720)]));
+        state.handle(Event::SetMode(Mode::Video));
+        state
+    }
+
+    #[test]
+    fn the_shutter_takes_a_photo_in_photo_mode_and_starts_recording_in_video_mode() {
+        let mut state = video_state();
+        assert_eq!(state.shutter_action(), Some(ShutterAction::StartRecording));
+        state.handle(Event::SetMode(Mode::Photo));
+        assert_eq!(state.shutter_action(), Some(ShutterAction::TakePhoto));
+    }
+
+    #[test]
+    fn the_shutter_does_nothing_until_the_camera_is_ready() {
+        assert_eq!(AppState::new().shutter_action(), None);
+    }
+
+    #[test]
+    fn starting_a_recording_asks_the_backend_for_a_video_in_the_folder() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let mut state = video_state();
+        state.start_recording(&mut camera, Path::new("/videos/Camera"));
+        assert_eq!(state.recording, Some(Recording { elapsed_secs: 0 }));
+        assert_eq!(camera.video_folders, [PathBuf::from("/videos/Camera")]);
+        assert_eq!(state.shutter_action(), Some(ShutterAction::StopRecording));
+    }
+
+    #[test]
+    fn a_recording_that_fails_to_start_leaves_the_state_idle() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]).failing_video();
+        let mut state = video_state();
+        state.start_recording(&mut camera, Path::new("/videos/Camera"));
+        assert_eq!(state.recording, None);
+    }
+
+    #[test]
+    fn stopping_tells_the_backend_and_returns_to_the_video_shutter() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let mut state = video_state();
+        state.start_recording(&mut camera, Path::new("/videos/Camera"));
+        state.stop_recording(&mut camera);
+        assert_eq!(state.recording, None);
+        assert_eq!(camera.videos_stopped, 1);
+        assert_eq!(state.shutter_action(), Some(ShutterAction::StartRecording));
+    }
+
+    #[test]
+    fn elapsed_seconds_tick_while_recording() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let mut state = video_state();
+        state.start_recording(&mut camera, Path::new("/videos/Camera"));
+        for _ in 0..3 {
+            state.handle(Event::RecordingTick);
+        }
+        assert_eq!(state.recording, Some(Recording { elapsed_secs: 3 }));
+    }
+
+    #[test]
+    fn stop_and_tick_are_ignored_when_not_recording() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let mut state = video_state();
+        let before = state.clone();
+        state.stop_recording(&mut camera);
+        state.handle(Event::RecordingStopped);
+        state.handle(Event::RecordingTick);
+        assert_eq!(state, before);
+        assert_eq!(camera.videos_stopped, 0);
+    }
+
+    #[test]
+    fn the_mode_cannot_change_while_recording() {
+        let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
+        let mut state = video_state();
+        state.start_recording(&mut camera, Path::new("/videos/Camera"));
+        state.handle(Event::SetMode(Mode::Photo));
+        assert_eq!(state.mode, Mode::Video);
+    }
+
+    #[test]
+    fn timecode_is_minutes_and_seconds_and_minutes_keep_counting_past_59() {
+        let timecode = |elapsed_secs| Recording { elapsed_secs }.timecode();
+        assert_eq!(timecode(0), "00:00");
+        assert_eq!(timecode(42), "00:42");
+        assert_eq!(timecode(3665), "61:05");
     }
 }

@@ -3,12 +3,14 @@
 mod app_core;
 mod assets;
 mod camera_window;
+mod capture_store;
 mod feedback;
 mod gst_camera;
+mod gst_recording;
 mod mode_pill;
 mod overlays;
-mod photo_store;
 mod photo_ui;
+mod recording_ui;
 // Verbatim copy of the design tokens page; later tickets consume the constants.
 #[allow(dead_code)]
 #[rustfmt::skip]
@@ -19,7 +21,7 @@ use gpui::{
 };
 
 use assets::Assets;
-use camera_window::{CameraWindow, KEY_CONTEXT, SelectPhoto, SelectVideo, TakePhoto};
+use camera_window::{CameraWindow, KEY_CONTEXT, PressShutter, SelectPhoto, SelectVideo};
 
 /// Default window size in logical px.
 const WINDOW_WIDTH: f32 = 960.0;
@@ -30,7 +32,7 @@ fn main() {
     Application::new().with_assets(Assets).run(|cx: &mut App| {
         Assets::register_fonts(cx);
         cx.bind_keys([
-            KeyBinding::new("space", TakePhoto, Some(KEY_CONTEXT)),
+            KeyBinding::new("space", PressShutter, Some(KEY_CONTEXT)),
             KeyBinding::new("p", SelectPhoto, Some(KEY_CONTEXT)),
             KeyBinding::new("v", SelectVideo, Some(KEY_CONTEXT)),
         ]);

@@ -1,28 +1,29 @@
 //! The Camera window: the Viewfinder filling the window, with the camera name top left.
 
+mod shutter;
+
 use std::sync::Arc;
 use std::time::Duration;
 
 use futures::StreamExt;
 use futures::channel::mpsc::{self, Receiver};
 use gpui::{
-    AsyncWindowContext, Context, FocusHandle, IntoElement, MouseButton, RenderImage, SharedString,
+    AsyncWindowContext, Context, FocusHandle, IntoElement, RenderImage, SharedString, Task,
     WeakEntity, Window, actions, div, prelude::*, px, rgba,
 };
 
 use crate::app_core::backend::CameraBackend;
-use crate::app_core::state::{AppState, CameraState, Event, Mode, PhotoOutcome};
+use crate::app_core::state::{AppState, CameraState, Event, Mode};
 use crate::feedback::{CaptureFeedback, ModeTransition};
 use crate::gst_camera::{Frame, GstCamera};
+use crate::gst_recording::{DefaultMicrophone, H264AacMp4, Recorder};
 use crate::mode_pill;
 use crate::overlays::{camera_label, scrim_bottom, scrim_top, viewfinder_image};
-use crate::photo_store::photos_folder;
-use crate::photo_ui::{
-    self, FLASH_DURATION, FillTransition, ShutterFill, ShutterLook, TOAST_DURATION,
-};
+use crate::photo_ui::{self, FillTransition};
+use crate::recording_ui;
 use crate::theme::{color, font, size, space};
 
-actions!(camera, [TakePhoto, SelectPhoto, SelectVideo]);
+actions!(camera, [PressShutter, SelectPhoto, SelectVideo]);
 
 /// Key context of the root view, used to scope key bindings.
 pub const KEY_CONTEXT: &str = "Camera";
@@ -38,6 +39,8 @@ pub struct CameraWindow {
     shutter_hovered: bool,
     shutter_pressed: bool,
     shutter_fill: FillTransition,
+    /// Advances the elapsed time while a Video records; dropping it stops the ticking.
+    recording_clock: Option<Task<()>>,
     frame: Option<Arc<RenderImage>>,
     /// The frame shown before `frame`. Its GPU texture is freed one frame late, because the GPU
     /// may still be drawing it; freeing it at once crashes the Vulkan renderer.
@@ -49,7 +52,7 @@ impl CameraWindow {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         // Capacity 0 still buffers one frame per sender: the UI only ever lags one frame behind.
         let (frames_tx, frames_rx) = mpsc::channel(0);
-        let mut camera = GstCamera::new(frames_tx);
+        let mut camera = GstCamera::new(frames_tx, Recorder::new(H264AacMp4, DefaultMicrophone));
         let mut state = AppState::new();
         start_camera(&mut camera, &mut state);
         cx.spawn_in(window, async move |this, cx| {
@@ -67,6 +70,7 @@ impl CameraWindow {
             shutter_hovered: false,
             shutter_pressed: false,
             shutter_fill: FillTransition::new(),
+            recording_clock: None,
             frame: None,
             previous_frame: None,
         }
@@ -84,63 +88,19 @@ impl CameraWindow {
         cx.notify();
     }
 
-    /// Take a Photo; once it is written, flash and toast the outcome. A failure only toasts.
-    fn take_photo(&mut self, cx: &mut Context<Self>) {
-        // Recording arrives in a later ticket; in Video Mode the Shutter does nothing.
-        if !matches!(self.state.camera, CameraState::Ready(_)) || self.state.mode != Mode::Photo {
-            return;
-        }
-        self.state.take_photo(&mut self.camera, &photos_folder());
-        let saved = matches!(self.state.photo, Some(PhotoOutcome::Saved(_)));
-        let id = self.feedback.begin(saved);
-        if saved {
-            after(cx, FLASH_DURATION, move |view, cx| view.end_flash(id, cx));
-        }
-        after(cx, TOAST_DURATION, move |view, cx| {
-            if view.feedback.end_toast(id) {
-                cx.notify();
-            }
-        });
-        self.update_shutter_fill(cx);
-    }
-
-    /// Switch to `mode`; does nothing if it is already active or the camera is not ready.
+    /// Switch to `mode`; does nothing if it is already active, the camera is not ready, or a Video records.
     fn select_mode(&mut self, mode: Mode, cx: &mut Context<Self>) {
-        if !matches!(self.state.camera, CameraState::Ready(_)) || self.state.mode == mode {
+        let previous = self.state.mode;
+        if !matches!(self.state.camera, CameraState::Ready(_)) {
             return;
         }
-        self.mode_transition.switched_from(self.state.mode);
         self.state.handle(Event::SetMode(mode));
+        if self.state.mode == previous {
+            return;
+        }
+        self.mode_transition.switched_from(previous);
         self.update_shutter_fill(cx);
         cx.notify();
-    }
-
-    /// Remove flash `id`, unless a newer Photo has replaced it.
-    fn end_flash(&mut self, id: u64, cx: &mut Context<Self>) {
-        if self.feedback.end_flash(id) {
-            self.update_shutter_fill(cx);
-        }
-    }
-
-    /// The mouse button is no longer held on the Shutter.
-    fn release_shutter(&mut self, cx: &mut Context<Self>) {
-        self.shutter_pressed = false;
-        self.update_shutter_fill(cx);
-    }
-
-    /// Fade the Shutter fill to the look that matches the Mode and the flash, press and hover state.
-    fn update_shutter_fill(&mut self, cx: &mut Context<Self>) {
-        let fill = if self.feedback.flash.is_some() || self.shutter_pressed {
-            ShutterFill::Pressed
-        } else if self.shutter_hovered {
-            ShutterFill::Hover
-        } else {
-            ShutterFill::Rest
-        };
-        let mode = self.state.mode;
-        if self.shutter_fill.retarget(ShutterLook { mode, fill }) {
-            cx.notify();
-        }
     }
 }
 
@@ -196,7 +156,7 @@ impl Render for CameraWindow {
         let root = div()
             .key_context(KEY_CONTEXT)
             .track_focus(&self.focus)
-            .on_action(cx.listener(|this, _: &TakePhoto, _, cx| this.take_photo(cx)))
+            .on_action(cx.listener(|this, _: &PressShutter, _, cx| this.press_shutter(cx)))
             .on_action(
                 cx.listener(|this, _: &SelectPhoto, _, cx| this.select_mode(Mode::Photo, cx)),
             )
@@ -210,21 +170,25 @@ impl Render for CameraWindow {
         let CameraState::Ready(camera) = &self.state.camera else {
             return root;
         };
-        root.bg(rgba(color::LETTERBOX))
+        let root = root
+            .bg(rgba(color::LETTERBOX))
             .children(self.frame.clone().map(viewfinder_image))
             // The flash sits under the scrims and controls.
             .children(self.feedback.flash.map(photo_ui::flash))
             .child(scrim_top())
             .child(scrim_bottom())
             .child(camera_label(SharedString::from(camera.name.clone())))
-            .child(self.mode_pill(cx))
-            .child(self.shutter(cx))
-            .children(
-                self.feedback
-                    .toast
-                    .zip(self.state.photo.as_ref())
-                    .map(|(id, outcome)| photo_ui::toast(id, outcome)),
-            )
+            .child(self.shutter(cx));
+        // While recording only the camera name, the timer and the Shutter are drawn.
+        if let Some(recording) = self.state.recording {
+            return root.child(recording_ui::timecode_pill(recording));
+        }
+        root.child(self.mode_pill(cx)).children(
+            self.feedback
+                .toast
+                .zip(self.state.photo.as_ref())
+                .map(|(id, outcome)| photo_ui::toast(id, outcome)),
+        )
     }
 }
 
@@ -254,38 +218,5 @@ impl CameraWindow {
             self.mode_transition.switches,
             cx.listener(move |this, _, _, cx| this.select_mode(target, cx)),
         )
-    }
-
-    /// The Shutter at the bottom center; clicking it takes a Photo.
-    fn shutter(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let button = photo_ui::shutter(self.shutter_fill)
-            .on_hover(cx.listener(|this, hovered: &bool, _, cx| {
-                this.shutter_hovered = *hovered;
-                this.update_shutter_fill(cx);
-            }))
-            .on_mouse_down(
-                MouseButton::Left,
-                cx.listener(|this, _, _, cx| {
-                    this.shutter_pressed = true;
-                    this.update_shutter_fill(cx);
-                }),
-            )
-            .on_mouse_up(
-                MouseButton::Left,
-                cx.listener(|this, _, _, cx| this.release_shutter(cx)),
-            )
-            .on_mouse_up_out(
-                MouseButton::Left,
-                cx.listener(|this, _, _, cx| this.release_shutter(cx)),
-            )
-            .on_click(cx.listener(|this, _, _, cx| this.take_photo(cx)));
-        div()
-            .absolute()
-            .bottom(px(space::S24))
-            .left_0()
-            .right_0()
-            .flex()
-            .justify_center()
-            .child(button)
     }
 }

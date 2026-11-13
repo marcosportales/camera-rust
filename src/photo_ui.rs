@@ -8,7 +8,7 @@ use gpui::{
 };
 
 use crate::app_core::state::{Mode, PhotoOutcome};
-use crate::photo_store::display_folder;
+use crate::capture_store::display_folder;
 use crate::theme::{color, font, motion, radius, size, space};
 
 /// Distance of the toast from the top edge, in logical px (the design's value; no spacing token).
@@ -211,17 +211,21 @@ pub fn mix(from: u32, to: u32, t: f32) -> Rgba {
     }
 }
 
-/// The Shutter button: a ring around a fill that fades between its looks.
-pub fn shutter(fill: FillTransition) -> Stateful<Div> {
+/// The round Shutter fill, fading between its looks.
+pub fn shutter_fill(fill: FillTransition) -> impl IntoElement {
     let (from, to, epoch, duration) = (fill.from, fill.to, fill.epoch, fill.duration());
-    let center = div()
+    div()
         .size(px(size::SHUTTER_FILL))
         .rounded_full()
         .with_animation(
             ("shutter-fill", epoch),
             Animation::new(duration),
             move |center, progress| center.bg(mix(from.color(), to.color(), progress)),
-        );
+        )
+}
+
+/// The Shutter button: a ring around `center`.
+pub fn shutter(center: impl IntoElement) -> Stateful<Div> {
     div()
         .id("shutter")
         .size(px(size::SHUTTER))

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use super::backend::{Camera, CameraBackend, CameraError, PhotoError};
+use super::backend::{Camera, CameraBackend, CameraError, PhotoError, VideoError};
 use super::resolution::Resolution;
 
 /// Scriptable stand-in for the real camera.
@@ -11,6 +11,11 @@ pub struct FakeCamera {
     photo: Result<PathBuf, PhotoError>,
     /// Folders Photos were requested for, in order.
     pub photo_folders: Vec<PathBuf>,
+    video: Result<PathBuf, VideoError>,
+    /// Folders Videos were started in, in order.
+    pub video_folders: Vec<PathBuf>,
+    /// How many times a Video was stopped.
+    pub videos_stopped: usize,
 }
 
 impl FakeCamera {
@@ -39,6 +44,12 @@ impl FakeCamera {
         self
     }
 
+    /// Script every Video to fail to start.
+    pub fn failing_video(mut self) -> Self {
+        self.video = Err(VideoError);
+        self
+    }
+
     /// Build a fake that answers detection with the scripted result.
     fn scripted(detection: Result<Camera, CameraError>) -> Self {
         Self {
@@ -46,6 +57,9 @@ impl FakeCamera {
             started_at: Vec::new(),
             photo: Ok(PathBuf::from("photo.jpg")),
             photo_folders: Vec::new(),
+            video: Ok(PathBuf::from("video.mp4")),
+            video_folders: Vec::new(),
+            videos_stopped: 0,
         }
     }
 }
@@ -67,6 +81,17 @@ impl CameraBackend for FakeCamera {
     fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError> {
         self.photo_folders.push(folder.to_path_buf());
         self.photo.clone()
+    }
+
+    /// Record the folder and return the scripted Video result.
+    fn start_video(&mut self, folder: &Path) -> Result<PathBuf, VideoError> {
+        self.video_folders.push(folder.to_path_buf());
+        self.video.clone()
+    }
+
+    /// Count the stop.
+    fn stop_video(&mut self) {
+        self.videos_stopped += 1;
     }
 }
 

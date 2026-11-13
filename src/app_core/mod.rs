@@ -3,5 +3,6 @@
 pub mod backend;
 #[cfg(test)]
 mod fake;
+pub mod recording;
 pub mod resolution;
 pub mod state;

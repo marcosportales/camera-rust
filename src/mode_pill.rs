@@ -1,11 +1,12 @@
 //! The Mode pill: two segments, Photo and Video, above the Shutter.
 
 use gpui::{
-    Animation, AnimationExt, App, BoxShadow, ClickEvent, Div, FontWeight, IntoElement, Stateful,
-    Window, div, point, prelude::*, px, rgba,
+    Animation, AnimationExt, App, ClickEvent, Div, FontWeight, IntoElement, Stateful, Window, div,
+    prelude::*, px, rgba,
 };
 
 use crate::app_core::state::Mode;
+use crate::overlays::shadow_control;
 use crate::photo_ui::mix;
 use crate::theme::{color, font, motion, radius, size, space};
 
@@ -20,12 +21,7 @@ pub fn track() -> Div {
         .gap(px(space::S2))
         .rounded(px(radius::FULL))
         .bg(rgba(color::CONTROL))
-        .shadow(vec![BoxShadow {
-            color: rgba(color::SHADOW_CONTROL).into(),
-            offset: point(px(0.0), px(2.0)),
-            blur_radius: px(8.0),
-            spread_radius: px(0.0),
-        }])
+        .shadow(shadow_control())
 }
 
 /// The segment selecting `target`. `selected` is the current Mode and `previous` the one before it;

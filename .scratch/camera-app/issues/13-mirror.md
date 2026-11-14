@@ -18,7 +18,3 @@
 - [x] Core tests: initial on, toggle by click and by M.
 
 **Out of this ticket:** Locking (12), tooltip (16).
-
-## Implementation notes
-
-- **Button placement verification — pending, non-blocking, low urgency.** `ls /dev/video*` returns `No such file or directory`, so button placement could not be checked with a live webcam here. Geometry/colors were verified by source review (`src/mirror_ui.rs:12`); `cargo test mirror` passes and `cargo test` passes all 71 tests. The user confirmed that clicking the button and pressing M correctly toggle the Viewfinder on 2026-11-14. What remains is a manual check of the button placement with a real camera on Wayland.

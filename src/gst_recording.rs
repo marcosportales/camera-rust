@@ -64,14 +64,14 @@ impl Recorder {
         }
     }
 
-    /// Start a Video written to `path`; its frames are pushed into [`VideoWriter::input`].
-    pub fn start(&self, path: &Path) -> anyhow::Result<VideoWriter> {
+    /// Start a Video at `path` with fixed Mirror orientation; frames enter [`VideoWriter::input`].
+    pub fn start(&self, path: &Path, mirror: bool) -> anyhow::Result<VideoWriter> {
         let audio = self
             .audio
             .is_available()
             .then(|| AudioCapture::start(self.audio.source()).ok())
             .flatten();
-        let pipeline = self.pipeline(audio.is_some())?;
+        let pipeline = self.pipeline(audio.is_some(), mirror)?;
         pipeline
             .by_name("file")
             .context("no filesink")?
@@ -99,7 +99,7 @@ impl Recorder {
     }
 
     /// Build the writer with a video input and, when available, an independent audio input.
-    fn pipeline(&self, with_audio: bool) -> anyhow::Result<gst::Pipeline> {
+    fn pipeline(&self, with_audio: bool, mirror: bool) -> anyhow::Result<gst::Pipeline> {
         let (video, audio_encoder, muxer) = (
             self.format.video_encoder(),
             self.format.audio_encoder(),
@@ -113,10 +113,15 @@ impl Recorder {
         } else {
             String::new()
         };
+        let orientation = if mirror {
+            "videoflip method=horizontal-flip !"
+        } else {
+            ""
+        };
         // The appsrc stamps each frame with the pipeline clock on arrival, so video and audio share a timeline.
         let description = format!(
             "appsrc name=video is-live=true do-timestamp=true format=time \
-             ! queue ! jpegdec ! videoconvert ! {video} ! queue ! mux. \
+             ! queue ! jpegdec ! videoconvert ! {orientation} {video} ! queue ! mux. \
              {audio} \
              {muxer} name=mux ! filesink name=file"
         );

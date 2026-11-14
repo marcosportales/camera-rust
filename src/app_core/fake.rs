@@ -106,13 +106,13 @@ impl CameraBackend for FakeCamera {
     }
 
     /// Record the folder and return the scripted Photo result.
-    fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError> {
+    fn take_photo(&mut self, folder: &Path, _mirror: bool) -> Result<PathBuf, PhotoError> {
         self.photo_folders.push(folder.to_path_buf());
         self.photo.clone()
     }
 
     /// Record the folder and return the scripted Video result.
-    fn start_video(&mut self, folder: &Path) -> Result<PathBuf, VideoError> {
+    fn start_video(&mut self, folder: &Path, _mirror: bool) -> Result<PathBuf, VideoError> {
         self.video_folders.push(folder.to_path_buf());
         self.video.clone()
     }

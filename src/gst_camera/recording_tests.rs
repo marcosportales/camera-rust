@@ -36,6 +36,11 @@ pub(super) fn test_recorder() -> Recorder {
     Recorder::new(H264AacMp4, FakeAudio::Available)
 }
 
+/// The real Video format without audio, for inspecting decoded pixels deterministically.
+pub(super) fn silent_recorder() -> Recorder {
+    Recorder::new(H264AacMp4, FakeAudio::Unavailable)
+}
+
 /// The core starts and saves normally with an unavailable microphone; the MP4 has only video.
 #[test]
 fn unavailable_audio_saves_exactly_one_video_stream() {
@@ -160,7 +165,7 @@ impl VideoFormat for FailingVideo {
 fn test_source_video_reports_pipeline_failure_on_stop() {
     let mut camera = test_camera(Recorder::new(FailingVideo, FakeAudio::Available));
     let folder = tempfile::tempdir().unwrap();
-    camera.start_video(folder.path()).unwrap();
+    camera.start_video(folder.path(), false).unwrap();
     std::thread::sleep(Duration::from_millis(100));
     assert_eq!(
         futures::executor::block_on(camera.stop_video()).unwrap(),

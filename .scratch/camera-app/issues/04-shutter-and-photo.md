@@ -1,5 +1,7 @@
 # 04: Shutter and Photo
 
+> **User override (2026-11-14):** [Special ticket 21](21-save-captures-with-mirror.md) supersedes this ticket's original no-Mirror/no-re-encoding rules for Captures. Saved Photos and Videos now follow the Mirror setting; the criteria below record the original implementation.
+
 **What to build:** The Shutter button and Space key take a Photo and save it as a JPEG, with the flash and the "Photo saved" toast.
 
 **Blocked by:** 03

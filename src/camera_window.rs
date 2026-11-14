@@ -209,25 +209,23 @@ impl Render for CameraWindow {
             ))
             .child(scrim_bottom())
             .child(camera_label(SharedString::from(camera.name.clone())))
-            .child(self.shutter(cx));
+            .child(self.shutter(cx))
+            .child(self.mode_pill(cx))
+            .child(self.timer_controls(window, cx));
         if let Some(numeral) = self.state.countdown_numeral() {
             return root.child(crate::countdown_ui::countdown(numeral));
         }
-        // While a Video records or saves, only the camera name, its status and the Shutter are drawn.
         match self.state.video {
             Some(VideoCapture::Recording(recording)) => {
                 root.child(recording_ui::timecode_pill(recording))
             }
             Some(VideoCapture::Saving) => root.child(recording_ui::saving_label()),
-            None => root
-                .child(self.mode_pill(cx))
-                .children(
-                    self.feedback
-                        .toast
-                        .zip(self.state.last_capture.as_ref())
-                        .map(|(id, outcome)| photo_ui::toast(id, outcome)),
-                )
-                .child(self.timer_controls(window, cx)),
+            None => root.children(
+                self.feedback
+                    .toast
+                    .zip(self.state.last_capture.as_ref())
+                    .map(|(id, outcome)| photo_ui::toast(id, outcome)),
+            ),
         }
     }
 }
@@ -256,6 +254,7 @@ impl CameraWindow {
             self.state.mode,
             self.mode_transition.previous,
             self.mode_transition.switches,
+            self.state.control_lock(),
             cx.listener(move |this, _, _, cx| this.select_mode(target, cx)),
         )
     }

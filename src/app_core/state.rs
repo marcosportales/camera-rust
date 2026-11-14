@@ -198,6 +198,9 @@ impl AppState {
 
     /// Apply an event to the state.
     pub fn handle(&mut self, event: Event) {
+        if self.ignores_locked_control(&event) {
+            return;
+        }
         match event {
             Event::StartCountdown {
                 now,
@@ -223,9 +226,7 @@ impl AppState {
                 self.camera = CameraState::Ready(camera);
             }
             Event::CameraFailed(error) => self.camera = CameraState::Error(error),
-            // The Mode stays put while a Video records or saves, so its Shutter look returns after.
-            Event::SetMode(mode) if self.video.is_none() => self.mode = mode,
-            Event::SetMode(_) => {}
+            Event::SetMode(mode) => self.mode = mode,
             Event::CycleTimer => self.timer = self.timer.next(),
             Event::ToggleTimerMenu => self.timer_menu_open = !self.timer_menu_open,
             Event::CloseTimerMenu => self.timer_menu_open = false,
@@ -237,6 +238,7 @@ impl AppState {
             Event::PhotoSaved(path) => self.last_capture = Some(CaptureOutcome::PhotoSaved(path)),
             Event::PhotoFailed => self.last_capture = Some(CaptureOutcome::PhotoFailed),
             Event::RecordingStarted => {
+                self.timer_menu_open = false;
                 self.video = Some(VideoCapture::Recording(Recording { elapsed_secs: 0 }));
             }
             Event::RecordingTick => {
@@ -530,14 +532,14 @@ mod tests {
         assert_eq!(state.shutter_action(), Some(ShutterAction::StartRecording));
     }
 
-    /// Shutter presses, repeated stops and Mode changes cannot interrupt saving.
+    /// Shutter presses and repeated stops cannot interrupt saving; settings are available.
     #[test]
-    fn the_shutter_and_mode_are_ignored_while_saving() {
+    fn the_shutter_is_ignored_but_mode_can_change_while_saving() {
         let mut camera = FakeCamera::ready("Cam", vec![res(1280, 720)]);
         let (mut state, _saving) = saving_state(&mut camera);
         assert_eq!(state.shutter_action(), None);
         state.handle(Event::SetMode(Mode::Photo));
-        assert_eq!(state.mode, Mode::Video);
+        assert_eq!(state.mode, Mode::Photo);
         assert!(state.stop_recording(&mut camera).is_none());
         assert_eq!(camera.videos_stopped, 1);
         assert_eq!(state.video, Some(VideoCapture::Saving));

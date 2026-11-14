@@ -49,6 +49,12 @@ pub enum CameraState {
 /// Something that happened that the core reacts to.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event {
+    StartCountdown {
+        now: std::time::Duration,
+        seconds: u64,
+    },
+    CountdownTick(std::time::Duration),
+    CancelCountdown,
     CameraReady(Camera),
     CameraFailed(CameraError),
     SetMode(Mode),
@@ -111,6 +117,7 @@ impl From<Result<PathBuf, VideoError>> for Event {
 /// Everything the UI shows, changed only through [`AppState::handle`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppState {
+    pub countdown: Option<super::countdown::Countdown>,
     pub mode: Mode,
     pub timer: Timer,
     pub timer_menu_open: bool,
@@ -125,6 +132,7 @@ impl AppState {
     /// State at app startup: Photo, Timer off, Mirror on, camera detecting.
     pub fn new() -> Self {
         Self {
+            countdown: None,
             mode: Mode::Photo,
             timer: Timer::Off,
             timer_menu_open: false,
@@ -190,6 +198,20 @@ impl AppState {
     /// Apply an event to the state.
     pub fn handle(&mut self, event: Event) {
         match event {
+            Event::StartCountdown { now, seconds } => {
+                self.timer_menu_open = false;
+                self.countdown = Some(super::countdown::Countdown {
+                    deadline: now + std::time::Duration::from_secs(seconds),
+                    remaining: seconds as u8,
+                });
+            }
+            Event::CountdownTick(now) => {
+                if let Some(countdown) = &mut self.countdown {
+                    countdown.remaining =
+                        countdown.deadline.saturating_sub(now).as_secs_f64().ceil() as u8;
+                }
+            }
+            Event::CancelCountdown => self.countdown = None,
             Event::CameraReady(camera) => {
                 self.resolution = default_resolution(&camera.resolutions);
                 self.camera = CameraState::Ready(camera);

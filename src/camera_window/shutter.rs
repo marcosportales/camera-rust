@@ -19,16 +19,16 @@ const TICK: Duration = Duration::from_secs(1);
 impl CameraWindow {
     /// Take a Photo, or start or stop a Video, depending on the Mode and whether a Video is recording.
     pub(super) fn press_shutter(&mut self, cx: &mut Context<Self>) {
-        match self.state.shutter_action() {
+        match self.state.press_shutter(self.countdown_clock.now()) {
             Some(ShutterAction::TakePhoto) => self.take_photo(cx),
             Some(ShutterAction::StartRecording) => self.start_recording(cx),
             Some(ShutterAction::StopRecording) => self.stop_recording(cx),
-            None => {}
+            None => self.sync_countdown(cx),
         }
     }
 
     /// Take a Photo; once it is written, flash and toast the outcome. A failure only toasts.
-    fn take_photo(&mut self, cx: &mut Context<Self>) {
+    pub(super) fn take_photo(&mut self, cx: &mut Context<Self>) {
         self.state.take_photo(&mut self.camera, &photos_folder());
         let saved = matches!(self.state.last_capture, Some(CaptureOutcome::PhotoSaved(_)));
         let id = self.show_feedback(saved, cx);
@@ -127,6 +127,9 @@ impl CameraWindow {
     /// the Mode's fill.
     pub(super) fn shutter(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let button = match self.state.video {
+            _ if self.state.countdown_numeral().is_some() => {
+                photo_ui::shutter(crate::countdown_ui::cancel_fill())
+            }
             Some(VideoCapture::Recording(_)) => {
                 photo_ui::shutter(recording_ui::stop_square(self.shutter_pressed))
             }

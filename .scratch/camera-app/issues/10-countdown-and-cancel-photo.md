@@ -4,19 +4,25 @@
 
 **Blocked by:** 04, 09
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 **Design reference:** `html/03-timer-countdown.html` / `png/03-timer-countdown.png`.
 
 **GPUI references:** Countdown timer and cancel (Esc): [`contexts.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/contexts.md), [`key_dispatch.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/key_dispatch.md).
 
-- [ ] With Timer Off, behavior is unchanged (Photo is immediate).
-- [ ] With Timer 3s or 10s, pressing the Shutter or Space in Photo Mode starts a countdown from the Timer value down to 1, one tick per second. The Photo is taken when the countdown ends (no tick shown for 0).
-- [ ] Screen as in `03-timer-countdown.html`: the numeral in `type.countdown` (144 / weight 300, tabular, line-height 1) at the position in the design; each new numeral fades in over `motion::TICK_FADE` (150 ms); a full-window `color::DIM` overlay over the Viewfinder; `scrim_bottom` kept; the hint "Esc" keycap + "to cancel" below the numeral as in the design.
-- [ ] During the countdown the Shutter shows the cancel look: fill `SHUTTER_FILL`, an `x` icon (`icon.lg`, `stroke.bold`, `TEXT_ON_SELECTED`), ring unchanged.
-- [ ] Esc, or pressing the Shutter/Space again, cancels: no Photo is taken, the UI returns to the ready look, no toast.
-- [ ] Only the camera name, numeral, hint and Shutter are drawn during the countdown, as in the design. (Locked controls are changed by ticket 12.)
-- [ ] The countdown does not restart or repeat after completion.
-- [ ] Core tests with a controllable clock: 3s timer yields ticks 3, 2, 1 then TakePhoto; cancel at each tick takes no Photo; Timer Off takes it immediately.
+- [x] With Timer Off, behavior is unchanged (Photo is immediate).
+- [x] With Timer 3s or 10s, pressing the Shutter or Space in Photo Mode starts a countdown from the Timer value down to 1, one tick per second. The Photo is taken when the countdown ends (no tick shown for 0).
+- [x] Screen as in `03-timer-countdown.html`: the numeral in `type.countdown` (144 / weight 300, tabular, line-height 1) at the position in the design; each new numeral fades in over `motion::TICK_FADE` (150 ms); a full-window `color::DIM` overlay over the Viewfinder; `scrim_bottom` kept; the hint "Esc" keycap + "to cancel" below the numeral as in the design.
+- [x] During the countdown the Shutter shows the cancel look: fill `SHUTTER_FILL`, an `x` icon (`icon.lg`, `stroke.bold`, `TEXT_ON_SELECTED`), ring unchanged.
+- [x] Esc, or pressing the Shutter/Space again, cancels: no Photo is taken, the UI returns to the ready look, no toast.
+- [x] Only the camera name, numeral, hint and Shutter are drawn during the countdown, as in the design. (Locked controls are changed by ticket 12.)
+- [x] The countdown does not restart or repeat after completion.
+- [x] Core tests with a controllable clock: 3s timer yields ticks 3, 2, 1 then TakePhoto; cancel at each tick takes no Photo; Timer Off takes it immediately.
 
 **Out of this ticket:** Countdown for Video (11), locking (12).
+
+## Comments
+
+- The user confirmed the functionality works correctly and requested removal of the pending verification note. The remaining checklist items are accepted based on that manual validation and the prior static review.
+
+## Implementation notes

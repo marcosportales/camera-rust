@@ -1,5 +1,6 @@
 //! The Camera window: the Viewfinder filling the window, with the camera name top left.
 
+mod countdown;
 mod shutter;
 mod timer;
 
@@ -19,7 +20,7 @@ use crate::feedback::{CaptureFeedback, MenuFade, ModeTransition};
 use crate::gst_camera::{Frame, GstCamera};
 use crate::gst_recording::{DefaultMicrophone, H264AacMp4, Recorder};
 use crate::mode_pill;
-use crate::overlays::{camera_label, scrim_bottom, scrim_top, viewfinder_image};
+use crate::overlays::{camera_label, scrim_bottom, viewfinder_image};
 use crate::photo_ui::{self, FillTransition};
 use crate::recording_ui;
 use crate::theme::{color, font, size, space};
@@ -52,6 +53,7 @@ pub struct CameraWindow {
     shutter_fill: FillTransition,
     /// Advances the elapsed time while a Video records; dropping it stops the ticking.
     recording_clock: Option<Task<()>>,
+    countdown_clock: countdown::CountdownClock,
     frame: Option<Arc<RenderImage>>,
     /// The frame shown before `frame`. Its GPU texture is freed one frame late, because the GPU
     /// may still be drawing it; freeing it at once crashes the Vulkan renderer.
@@ -83,6 +85,7 @@ impl CameraWindow {
             shutter_pressed: false,
             shutter_fill: FillTransition::new(),
             recording_clock: None,
+            countdown_clock: countdown::CountdownClock::new(),
             frame: None,
             previous_frame: None,
         }
@@ -179,6 +182,7 @@ impl CameraWindow {
                 this.timer_event(Event::CycleTimer, cx);
             }))
             .on_action(cx.listener(|this, _: &CloseTimerMenu, _, cx| {
+                this.cancel_countdown(cx);
                 this.timer_event(Event::CloseTimerMenu, cx);
             }))
             .size_full()
@@ -200,10 +204,15 @@ impl Render for CameraWindow {
             .children(self.frame.clone().map(viewfinder_image))
             // The flash sits under the scrims and controls.
             .children(self.feedback.flash.map(photo_ui::flash))
-            .child(scrim_top())
+            .child(crate::countdown_ui::backdrop(
+                self.state.countdown_numeral().is_some(),
+            ))
             .child(scrim_bottom())
             .child(camera_label(SharedString::from(camera.name.clone())))
             .child(self.shutter(cx));
+        if let Some(numeral) = self.state.countdown_numeral() {
+            return root.child(crate::countdown_ui::countdown(numeral));
+        }
         // While a Video records or saves, only the camera name, its status and the Shutter are drawn.
         match self.state.video {
             Some(VideoCapture::Recording(recording)) => {

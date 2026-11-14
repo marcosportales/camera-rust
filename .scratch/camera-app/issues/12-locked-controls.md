@@ -11,10 +11,10 @@
 - [x] While a countdown or recording is active, the mode pill (both segments), Timer button, Resolution button and Mirror button remain drawn at their normal positions in the `disabled` look: icons/text in `color::TEXT_DISABLED`, no hover fill, no pressed state, default cursor.
 - [x] Clicking them, and the shortcuts P, V, T and M, do nothing during those states, and the menus (Timer, Resolution) cannot be opened.
 - [x] Hovering a disabled control (after the standard tooltip delay) shows a tooltip in the standard tooltip style (28 px, `radius::SM`, `color::OVERLAY`, `type.small`) with the text "Unavailable during countdown" or "Unavailable while recording" depending on the state. No keycap is shown on these tooltips.
-- [ ] The Last-Capture Thumbnail is not a locked control (it only opens the folder) and keeps working.
+- [x] The Last-Capture Thumbnail is not a locked control (it only opens the folder) and keeps working.
 - [x] When the countdown ends in cancel, the Photo is taken, or the recording ends, all four controls return to normal immediately.
 - [x] The recording-timer pill (ticket 06) is unaffected.
-- [ ] Core tests: every Mode/Timer/Resolution/Mirror event is ignored in countdown and recording states and accepted otherwise.
+- [x] Core tests: every Mode/Timer/Resolution/Mirror event is ignored in countdown and recording states and accepted otherwise.
 
 **Out of this ticket:** Control fade-out (15), the standard shortcut tooltips (16).
 

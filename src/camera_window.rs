@@ -1,5 +1,6 @@
 //! The Camera window: the Viewfinder filling the window, with the camera name top left.
 
+mod auto_hide;
 mod countdown;
 mod resolution;
 mod settings;
@@ -21,7 +22,7 @@ use crate::feedback::{CaptureFeedback, MenuFade, ModeTransition};
 use crate::gst_camera::{Frame, GstCamera};
 use crate::gst_recording::{DefaultMicrophone, H264AacMp4, Recorder};
 use crate::mode_pill;
-use crate::overlays::{camera_label, scrim_bottom, viewfinder_image};
+use crate::overlays::{camera_label, viewfinder_image};
 use crate::photo_ui::{self, FillTransition};
 use crate::recording_ui;
 use crate::theme::{color, font, size, space};
@@ -57,6 +58,7 @@ pub struct CameraWindow {
     /// Advances the elapsed time while a Video records; dropping it stops the ticking.
     recording_clock: Option<Task<()>>,
     countdown_clock: countdown::CountdownClock,
+    controls_visibility: auto_hide::ControlsVisibility,
     frame: Option<Arc<RenderImage>>,
     /// The frame shown before `frame`. Its GPU texture is freed one frame late, because the GPU
     /// may still be drawing it; freeing it at once crashes the Vulkan renderer.
@@ -90,6 +92,7 @@ impl CameraWindow {
             shutter_fill: FillTransition::new(),
             recording_clock: None,
             countdown_clock: countdown::CountdownClock::new(),
+            controls_visibility: auto_hide::ControlsVisibility::new(),
             frame: None,
             previous_frame: None,
         }
@@ -218,6 +221,7 @@ impl CameraWindow {
 impl Render for CameraWindow {
     /// Draw the Viewfinder and camera name when the camera is ready, else only the app background.
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        self.sync_controls(false, cx);
         let root = self.root(cx);
         let CameraState::Ready(camera) = &self.state.camera else {
             return root;
@@ -230,15 +234,8 @@ impl Render for CameraWindow {
             .child(crate::countdown_ui::backdrop(
                 self.state.countdown_numeral().is_some(),
             ))
-            .child(scrim_bottom())
-            .child(camera_label(SharedString::from(camera.name.clone())))
-            .child(self.shutter(cx))
-            .child(crate::mirror_ui::control(
-                &self.state,
-                cx.listener(|this, _, window, cx| this.toggle_mirror(window, cx)),
-            ))
-            .child(self.mode_pill(cx))
-            .child(self.settings_controls(window, cx));
+            .child(self.overlay_controls(window, cx))
+            .child(camera_label(SharedString::from(camera.name.clone())));
         if let Some(numeral) = self.state.countdown_numeral() {
             return root.child(crate::countdown_ui::countdown(numeral));
         }

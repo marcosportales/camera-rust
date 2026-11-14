@@ -7,11 +7,11 @@ use std::time::Duration;
 #[test]
 fn saved_video_follows_mirror_setting() {
     gst::init().unwrap();
-    for (mirror, timer, seconds) in [
-        (true, Timer::Off, 0),
-        (false, Timer::Off, 0),
-        (true, Timer::ThreeSeconds, 3),
-        (false, Timer::TenSeconds, 10),
+    for (mirror, timer) in [
+        (true, Timer::Off),
+        (false, Timer::Off),
+        (true, Timer::ThreeSeconds),
+        (false, Timer::TenSeconds),
     ] {
         let (frames, _) = mpsc::channel(0);
         let mut camera = GstCamera::new(frames, super::recording_tests::silent_recorder());
@@ -25,14 +25,7 @@ fn saved_video_follows_mirror_setting() {
             state.handle(Event::ToggleMirror);
         }
         let folder = tempfile::tempdir().unwrap();
-        state.handle(Event::SetTimer(timer));
-        let action = state.press_shutter(Duration::ZERO);
-        let action = if seconds == 0 {
-            action
-        } else {
-            assert_eq!(action, None);
-            state.advance_countdown(Duration::from_secs(seconds))
-        };
+        let action = capture_action(&mut state, timer);
         assert_eq!(action, Some(ShutterAction::StartRecording));
         state.start_recording(&mut camera, folder.path());
         assert!(state.recording().is_some());
@@ -135,7 +128,6 @@ fn mirrored_photo_failure_leaves_no_capture() {
 /// Saved Photos follow Mirror on/off/on without altering the source or changing row order.
 #[test]
 fn saved_photo_follows_mirror_setting() {
-    use crate::app_core::state::{AppState, CaptureOutcome, Event, ShutterAction, Timer};
     gst::init().unwrap();
     let sample = asymmetric_sample();
     let source = sample.buffer().unwrap().map_readable().unwrap().to_vec();
@@ -148,19 +140,12 @@ fn saved_photo_follows_mirror_setting() {
         name: "Test camera".into(),
         resolutions: vec![],
     }));
-    for (mirror, timer, seconds) in [
-        (true, Timer::Off, 0),
-        (false, Timer::ThreeSeconds, 3),
-        (true, Timer::TenSeconds, 10),
+    for (mirror, timer) in [
+        (true, Timer::Off),
+        (false, Timer::ThreeSeconds),
+        (true, Timer::TenSeconds),
     ] {
-        state.handle(Event::SetTimer(timer));
-        let action = state.press_shutter(Duration::ZERO);
-        let action = if seconds == 0 {
-            action
-        } else {
-            assert_eq!(action, None);
-            state.advance_countdown(Duration::from_secs(seconds))
-        };
+        let action = capture_action(&mut state, timer);
         assert_eq!(action, Some(ShutterAction::TakePhoto));
         assert_eq!(state.mirror, mirror);
         state.take_photo(&mut camera, folder.path());
@@ -179,4 +164,15 @@ fn saved_photo_follows_mirror_setting() {
         }
         state.handle(Event::ToggleMirror);
     }
+}
+
+/// Press the Shutter and advance an enabled Timer to its deadline, without wall-clock waiting.
+fn capture_action(state: &mut AppState, timer: Timer) -> Option<ShutterAction> {
+    state.handle(Event::SetTimer(timer));
+    let action = state.press_shutter(Duration::ZERO);
+    if timer == Timer::Off {
+        return action;
+    }
+    assert_eq!(action, None);
+    state.advance_countdown(Duration::from_secs(10))
 }

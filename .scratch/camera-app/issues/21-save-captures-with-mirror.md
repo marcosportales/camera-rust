@@ -12,12 +12,21 @@ Mirrored Photos may be decoded and re-encoded as JPEG to bake in the horizontal 
 
 ## Acceptance criteria
 
-- [ ] The core passes the current Mirror setting to the backend for immediate and Timer-triggered Photos and Videos. Video orientation is fixed when recording starts.
-- [ ] With Mirror on, the saved JPEG has horizontally reversed columns, preserving dimensions and row order.
-- [ ] With Mirror off, the saved JPEG matches the camera's source bytes; toggling on/off/on does not mutate that source.
-- [ ] Saved Videos follow Mirror on/off at recording start, preserving dimensions and audio/finalization behavior.
-- [ ] Encoding/decoding and write failures follow the existing Photo failure feedback without leaving a successful or partial Capture.
-- [ ] The spec, glossary and historical tickets link this explicit user override, and replace the original never-mirrored Video requirement.
-- [ ] Relevant tests, full `cargo test`, `cargo check`, `cargo clippy` and formatting checks pass; standards and spec reviews are complete.
+- [x] The core passes the current Mirror setting to the backend for immediate and Timer-triggered Photos and Videos. Video orientation is fixed when recording starts.
+- [x] With Mirror on, the saved JPEG has horizontally reversed columns, preserving dimensions and row order.
+- [x] With Mirror off, the saved JPEG matches the camera's source bytes; toggling on/off/on does not mutate that source.
+- [x] Saved Videos follow Mirror on/off at recording start, preserving dimensions and audio/finalization behavior.
+- [x] Encoding/decoding and write failures follow the existing Photo failure feedback without leaving a successful or partial Capture.
+- [x] The spec, glossary and historical tickets link this explicit user override, and replace the original never-mirrored Video requirement.
+- [x] Relevant tests, full `cargo test`, `cargo check`, `cargo clippy` and formatting checks pass; standards and spec reviews are complete.
 
 **Out of this ticket:** Changing the Mirror control, persisting settings.
+
+## Verification
+
+- `cargo check`, `cargo clippy --all-targets -- -D warnings`, `cargo fmt --check` and `git diff --check` passed.
+- `cargo test`: 73 passed. After extracting the shared Timer test helper following review, `cargo test mirror`: 7 passed; Clippy and formatting passed again.
+- Both saved-orientation tests failed against the prior behavior before implementation, then passed with actual JPEG/MP4 decoding. Tests cover immediate/Timer captures, Mirror locking during Video, JPEG byte preservation, invalid JPEG and unwritable destination failures. Existing audio/finalization tests passed in the full suite.
+- Parallel standards and spec reviews against `main` (`14d632b`) completed. Standards: one minor duplicated-test setup finding, fixed and re-reviewed with no remaining findings. Spec: no findings.
+
+## Implementation notes

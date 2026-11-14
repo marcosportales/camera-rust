@@ -44,7 +44,7 @@ where
         Mode::Video => ("mode-video", "Video"),
     };
     let active = selected == target;
-    let (from, to) = segment_colors(target, selected, previous);
+    let (from, to) = segment_colors(target, selected, previous, lock.is_some());
     let button: Stateful<Div> = div()
         .id(id)
         .h(px(size::SEGMENT))
@@ -67,10 +67,15 @@ where
 }
 
 /// Fade only when this segment changed selection; otherwise hold its resting fill.
-fn segment_colors(target: Mode, selected: Mode, previous: Mode) -> (u32, u32) {
+fn segment_colors(target: Mode, selected: Mode, previous: Mode, locked: bool) -> (u32, u32) {
     let fill = |mode| {
         if mode == target {
-            color::SELECTED
+            if locked {
+                // Keep the selection visible without washing out the disabled label.
+                color::CONTROL_ON
+            } else {
+                color::SELECTED
+            }
         } else {
             SEGMENT_CLEAR
         }

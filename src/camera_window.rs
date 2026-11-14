@@ -1,6 +1,7 @@
 //! The Camera window: the Viewfinder filling the window, with the camera name top left.
 
 mod shutter;
+mod timer;
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -8,13 +9,13 @@ use std::time::Duration;
 use futures::StreamExt;
 use futures::channel::mpsc::{self, Receiver};
 use gpui::{
-    AsyncWindowContext, Context, FocusHandle, IntoElement, RenderImage, SharedString, Task,
+    AsyncWindowContext, Context, Div, FocusHandle, IntoElement, RenderImage, SharedString, Task,
     WeakEntity, Window, actions, div, prelude::*, px, rgba,
 };
 
 use crate::app_core::backend::CameraBackend;
 use crate::app_core::state::{AppState, CameraState, Event, Mode, VideoCapture};
-use crate::feedback::{CaptureFeedback, ModeTransition};
+use crate::feedback::{CaptureFeedback, MenuFade, ModeTransition};
 use crate::gst_camera::{Frame, GstCamera};
 use crate::gst_recording::{DefaultMicrophone, H264AacMp4, Recorder};
 use crate::mode_pill;
@@ -23,7 +24,16 @@ use crate::photo_ui::{self, FillTransition};
 use crate::recording_ui;
 use crate::theme::{color, font, size, space};
 
-actions!(camera, [PressShutter, SelectPhoto, SelectVideo]);
+actions!(
+    camera,
+    [
+        PressShutter,
+        SelectPhoto,
+        SelectVideo,
+        CycleTimer,
+        CloseTimerMenu
+    ]
+);
 
 /// Key context of the root view, used to scope key bindings.
 pub const KEY_CONTEXT: &str = "Camera";
@@ -36,6 +46,7 @@ pub struct CameraWindow {
     focus: FocusHandle,
     feedback: CaptureFeedback,
     mode_transition: ModeTransition,
+    timer_menu_fade: MenuFade,
     shutter_hovered: bool,
     shutter_pressed: bool,
     shutter_fill: FillTransition,
@@ -67,6 +78,7 @@ impl CameraWindow {
             focus,
             feedback: CaptureFeedback::default(),
             mode_transition: ModeTransition::new(),
+            timer_menu_fade: MenuFade::new(),
             shutter_hovered: false,
             shutter_pressed: false,
             shutter_fill: FillTransition::new(),
@@ -150,10 +162,10 @@ fn render_image(frame: Frame) -> Option<RenderImage> {
     Some(RenderImage::new([image::Frame::new(buffer)]))
 }
 
-impl Render for CameraWindow {
-    /// Draw the Viewfinder and camera name when the camera is ready, else only the app background.
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let root = div()
+impl CameraWindow {
+    /// The root surface and keyboard actions, scoped to the Camera window's focus.
+    fn root(&self, cx: &mut Context<Self>) -> Div {
+        div()
             .key_context(KEY_CONTEXT)
             .track_focus(&self.focus)
             .on_action(cx.listener(|this, _: &PressShutter, _, cx| this.press_shutter(cx)))
@@ -163,10 +175,23 @@ impl Render for CameraWindow {
             .on_action(
                 cx.listener(|this, _: &SelectVideo, _, cx| this.select_mode(Mode::Video, cx)),
             )
+            .on_action(cx.listener(|this, _: &CycleTimer, _, cx| {
+                this.timer_event(Event::CycleTimer, cx);
+            }))
+            .on_action(cx.listener(|this, _: &CloseTimerMenu, _, cx| {
+                this.timer_event(Event::CloseTimerMenu, cx);
+            }))
             .size_full()
             .relative()
             .bg(rgba(color::APP_BG))
-            .font_family(font::FAMILY);
+            .font_family(font::FAMILY)
+    }
+}
+
+impl Render for CameraWindow {
+    /// Draw the Viewfinder and camera name when the camera is ready, else only the app background.
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let root = self.root(cx);
         let CameraState::Ready(camera) = &self.state.camera else {
             return root;
         };
@@ -185,12 +210,15 @@ impl Render for CameraWindow {
                 root.child(recording_ui::timecode_pill(recording))
             }
             Some(VideoCapture::Saving) => root.child(recording_ui::saving_label()),
-            None => root.child(self.mode_pill(cx)).children(
-                self.feedback
-                    .toast
-                    .zip(self.state.last_capture.as_ref())
-                    .map(|(id, outcome)| photo_ui::toast(id, outcome)),
-            ),
+            None => root
+                .child(self.mode_pill(cx))
+                .children(
+                    self.feedback
+                        .toast
+                        .zip(self.state.last_capture.as_ref())
+                        .map(|(id, outcome)| photo_ui::toast(id, outcome)),
+                )
+                .child(self.timer_controls(window, cx)),
         }
     }
 }

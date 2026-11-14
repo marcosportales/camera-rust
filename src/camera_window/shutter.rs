@@ -54,6 +54,9 @@ impl CameraWindow {
     pub(super) fn start_recording(&mut self, cx: &mut Context<Self>) {
         self.state
             .start_recording(&mut self.camera, &videos_folder());
+        self.timer_menu_fade.retarget(self.state.timer_menu_open);
+        self.resolution_menu_fade
+            .retarget(self.state.resolution_menu_open);
         if self.state.recording().is_none() {
             self.show_feedback(false, cx);
         } else {

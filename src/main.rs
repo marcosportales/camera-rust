@@ -8,12 +8,14 @@ mod feedback;
 mod gst_camera;
 mod gst_recording;
 mod locked_controls;
+mod menu_ui;
 mod mirror_ui;
 mod mode_pill;
 mod overlays;
 mod photo_jpeg;
 mod photo_ui;
 mod recording_ui;
+mod resolution_ui;
 mod timer_ui;
 mod viewfinder;
 // Verbatim copy of the design tokens page; later tickets consume the constants.

@@ -10,6 +10,8 @@ pub struct FakeCamera {
     detection: Result<Camera, CameraError>,
     /// Resolutions the Viewfinder was started at, in order.
     pub started_at: Vec<Resolution>,
+    /// Scripted outcomes of successive Viewfinder starts; defaults to success.
+    pub start_results: std::collections::VecDeque<Result<(), CameraError>>,
     photo: Result<PathBuf, PhotoError>,
     /// Folders Photos were requested for, in order.
     pub photo_folders: Vec<PathBuf>,
@@ -82,6 +84,7 @@ impl FakeCamera {
         Self {
             detection,
             started_at: Vec::new(),
+            start_results: Default::default(),
             photo: Ok(PathBuf::from("photo.jpg")),
             photo_folders: Vec::new(),
             video: Ok(PathBuf::from("video.mp4")),
@@ -102,7 +105,7 @@ impl CameraBackend for FakeCamera {
     fn start_viewfinder(&mut self, resolution: Resolution) -> Result<(), CameraError> {
         self.detection.as_ref().map_err(|error| *error)?;
         self.started_at.push(resolution);
-        Ok(())
+        self.start_results.pop_front().unwrap_or(Ok(()))
     }
 
     /// Record the folder and return the scripted Photo result.

@@ -1,8 +1,7 @@
 //! Pure visual pieces of the Timer control and its menu.
 
 use gpui::{
-    App, BoxShadow, Div, FontWeight, MouseDownEvent, Stateful, Window, div, point, prelude::*, px,
-    rgba, svg,
+    App, Div, FontWeight, MouseDownEvent, Stateful, Window, div, prelude::*, px, rgba, svg,
 };
 
 use crate::app_core::controls::ControlLock;
@@ -11,7 +10,7 @@ use crate::locked_controls;
 use crate::overlays::shadow_control;
 use crate::theme::{color, font, radius, size, space};
 
-/// The top-right control row; future Resolution controls follow the Timer with an 8 px gap.
+/// The top-right control row; Resolution follows the Timer with an 8 px gap.
 pub fn controls() -> Div {
     div()
         .absolute()
@@ -80,37 +79,7 @@ pub fn button(timer: Timer, lock: Option<ControlLock>) -> Stateful<Div> {
 
 /// The 184 px Timer menu below its button, including its header and shortcut hint.
 pub fn menu(opacity: f32) -> Div {
-    div()
-        .absolute()
-        .top(px(size::CONTROL + space::S8))
-        .right_0()
-        .w(px(184.0))
-        .p(px(space::S4))
-        .flex()
-        .flex_col()
-        .rounded(px(radius::LG))
-        .bg(rgba(color::OVERLAY))
-        .border_1()
-        .border_color(rgba(color::BORDER_SUBTLE))
-        .shadow(vec![BoxShadow {
-            color: rgba(color::SHADOW_OVERLAY).into(),
-            offset: point(px(0.0), px(8.0)),
-            blur_radius: px(24.0),
-            spread_radius: px(0.0),
-        }])
-        .text_color(rgba(color::TEXT_PRIMARY))
-        .opacity(opacity)
-        .occlude()
-        .child(
-            div()
-                .px(px(space::S12))
-                .pt(px(space::S8))
-                .pb(px(space::S4))
-                .text_size(px(font::CAPTION))
-                .font_weight(FontWeight::SEMIBOLD)
-                .text_color(rgba(color::TEXT_TERTIARY))
-                .child("Timer"),
-        )
+    crate::menu_ui::surface("Timer", 184.0, opacity)
 }
 
 /// A Timer choice, with a check next to the currently selected value.

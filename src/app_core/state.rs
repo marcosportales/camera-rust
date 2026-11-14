@@ -62,6 +62,8 @@ pub enum Event {
     CycleTimer,
     ToggleTimerMenu,
     CloseTimerMenu,
+    ToggleResolutionMenu,
+    CloseResolutionMenu,
     SetTimer(Timer),
     ToggleMirror,
     PhotoSaved(PathBuf),
@@ -122,6 +124,7 @@ pub struct AppState {
     pub mode: Mode,
     pub timer: Timer,
     pub timer_menu_open: bool,
+    pub resolution_menu_open: bool,
     pub mirror: bool,
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
@@ -137,6 +140,7 @@ impl AppState {
             mode: Mode::Photo,
             timer: Timer::Off,
             timer_menu_open: false,
+            resolution_menu_open: false,
             mirror: true,
             resolution: None,
             camera: CameraState::Detecting,
@@ -208,6 +212,7 @@ impl AppState {
                 action,
             } => {
                 self.timer_menu_open = false;
+                self.resolution_menu_open = false;
                 self.countdown = Some(super::countdown::Countdown {
                     action,
                     deadline: now + std::time::Duration::from_secs(seconds),
@@ -228,17 +233,27 @@ impl AppState {
             Event::CameraFailed(error) => self.camera = CameraState::Error(error),
             Event::SetMode(mode) => self.mode = mode,
             Event::CycleTimer => self.timer = self.timer.next(),
-            Event::ToggleTimerMenu => self.timer_menu_open = !self.timer_menu_open,
+            Event::ToggleTimerMenu => {
+                self.timer_menu_open = !self.timer_menu_open;
+                self.resolution_menu_open = false;
+            }
+            Event::ToggleResolutionMenu => {
+                self.resolution_menu_open = !self.resolution_menu_open;
+                self.timer_menu_open = false;
+            }
+            Event::CloseResolutionMenu => self.resolution_menu_open = false,
             Event::CloseTimerMenu => self.timer_menu_open = false,
             Event::SetTimer(timer) => {
                 self.timer = timer;
                 self.timer_menu_open = false;
+                self.resolution_menu_open = false;
             }
             Event::ToggleMirror => self.mirror = !self.mirror,
             Event::PhotoSaved(path) => self.last_capture = Some(CaptureOutcome::PhotoSaved(path)),
             Event::PhotoFailed => self.last_capture = Some(CaptureOutcome::PhotoFailed),
             Event::RecordingStarted => {
                 self.timer_menu_open = false;
+                self.resolution_menu_open = false;
                 self.video = Some(VideoCapture::Recording(Recording { elapsed_secs: 0 }));
             }
             Event::RecordingTick => {

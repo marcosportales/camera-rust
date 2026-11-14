@@ -38,6 +38,7 @@ impl AppState {
                 event,
                 Event::SetMode(_)
                     | Event::CycleTimer
+                    | Event::ToggleResolutionMenu
                     | Event::ToggleTimerMenu
                     | Event::SetTimer(_)
                     | Event::ToggleMirror
@@ -62,12 +63,30 @@ mod tests {
             Event::RecordingStarted,
         ] {
             let mut state = AppState::new();
+            let hd = crate::app_core::resolution::Resolution {
+                width: 1280,
+                height: 720,
+            };
+            let vga = crate::app_core::resolution::Resolution {
+                width: 640,
+                height: 480,
+            };
+            let mut camera = crate::app_core::fake::FakeCamera::ready("Cam", vec![hd, vga]);
+            use crate::app_core::backend::CameraBackend;
+            state.handle(camera.detect_cameras().into());
+            state.handle(Event::ToggleResolutionMenu);
             state.handle(start);
+            assert!(!state.resolution_menu_open);
+            let before = state.clone();
+            state.select_resolution(vga, &mut camera).unwrap();
+            assert_eq!(state, before);
+            assert!(camera.started_at.is_empty());
             for event in [
                 Event::SetMode(Mode::Video),
                 Event::SetMode(Mode::Photo),
                 Event::CycleTimer,
                 Event::ToggleTimerMenu,
+                Event::ToggleResolutionMenu,
                 Event::SetTimer(Timer::ThreeSeconds),
                 Event::SetTimer(Timer::TenSeconds),
                 Event::SetTimer(Timer::Off),

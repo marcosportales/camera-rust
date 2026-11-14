@@ -59,13 +59,15 @@ impl CameraWindow {
         let opacity = self.timer_menu_fade.opacity();
         div()
             .relative()
-            .child(
+            .child(crate::tooltip_ui::control(
                 timer_ui::button(self.state.timer, lock).when(lock.is_none(), |button| {
                     button.on_click(cx.listener(|this, _, _, cx| {
                         this.settings_event(Event::ToggleTimerMenu, cx);
                     }))
                 }),
-            )
+                self.shortcut_hint(crate::app_core::tooltips::Control::Timer),
+                crate::tooltip_ui::Placement::Below,
+            ))
             .when(
                 lock.is_none() && (self.state.timer_menu_open || opacity > 0.0),
                 |control| control.child(self.timer_menu(opacity, cx)),
@@ -84,6 +86,8 @@ impl CameraWindow {
                     })
                 }),
             )
-            .child(timer_ui::shortcut_hint())
+            .child(timer_ui::shortcut_hint(
+                self.shortcut_hint(crate::app_core::tooltips::Control::CycleTimer),
+            ))
     }
 }

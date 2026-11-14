@@ -9,3 +9,4 @@ mod fake;
 pub mod recording;
 pub mod resolution;
 pub mod state;
+pub mod tooltips;

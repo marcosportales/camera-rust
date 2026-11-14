@@ -273,13 +273,20 @@ impl CameraWindow {
 
     /// The pill segment that selects `target` when clicked.
     fn mode_segment(&self, target: Mode, cx: &mut Context<Self>) -> impl IntoElement {
-        mode_pill::segment(
-            target,
-            self.state.mode,
-            self.mode_transition.previous,
-            self.mode_transition.switches,
-            self.state.control_lock(),
-            cx.listener(move |this, _, _, cx| this.select_mode(target, cx)),
+        crate::tooltip_ui::control(
+            mode_pill::segment(
+                target,
+                self.state.mode,
+                self.mode_transition.previous,
+                self.mode_transition.switches,
+                self.state.control_lock(),
+                cx.listener(move |this, _, _, cx| this.select_mode(target, cx)),
+            ),
+            self.shortcut_hint(match target {
+                Mode::Photo => crate::app_core::tooltips::Control::Photo,
+                Mode::Video => crate::app_core::tooltips::Control::Video,
+            }),
+            crate::tooltip_ui::Placement::Above,
         )
     }
 }

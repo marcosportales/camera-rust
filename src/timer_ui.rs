@@ -22,11 +22,7 @@ pub fn controls() -> Div {
 
 /// Catch any outside press while the menu is open, shielding the controls below it.
 pub fn dismiss_layer(on_dismiss: impl Fn(&MouseDownEvent, &mut Window, &mut App) + 'static) -> Div {
-    div()
-        .absolute()
-        .size_full()
-        .occlude()
-        .on_any_mouse_down(on_dismiss)
+    div().absolute().size_full().on_any_mouse_down(on_dismiss)
 }
 
 /// The Timer icon alone when Off, or the icon with its selected value in the set look.
@@ -38,7 +34,6 @@ pub fn button(timer: Timer, lock: Option<ControlLock>) -> Stateful<Div> {
     };
     let button = div()
         .id("timer")
-        .occlude()
         .h(px(size::CONTROL))
         .min_w(px(size::CONTROL))
         .when(value.is_some(), |button| {
@@ -117,7 +112,7 @@ pub fn row(timer: Timer, selected: Timer) -> Stateful<Div> {
 }
 
 /// The menu's separator and "Cycle timer" hint with the T keycap.
-pub fn shortcut_hint() -> Div {
+pub fn shortcut_hint(hint: Option<crate::app_core::tooltips::Hint>) -> Div {
     div()
         .child(
             div()
@@ -125,7 +120,7 @@ pub fn shortcut_hint() -> Div {
                 .my(px(space::S4))
                 .bg(rgba(color::ITEM_HOVER)),
         )
-        .child(
+        .child(crate::tooltip_ui::control(
             div()
                 .h(px(size::MENU_ROW))
                 .pl(px(space::S12))
@@ -137,23 +132,8 @@ pub fn shortcut_hint() -> Div {
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(rgba(color::TEXT_TERTIARY))
                 .child("Cycle timer")
-                .child(keycap()),
-        )
-}
-
-/// The T keycap in the menu footer.
-fn keycap() -> Div {
-    div()
-        .size(px(size::KEYCAP))
-        .flex()
-        .items_center()
-        .justify_center()
-        .rounded(px(radius::XS))
-        .bg(rgba(color::KEYCAP))
-        .border_1()
-        .border_color(rgba(color::KEYCAP_BORDER))
-        .text_size(px(font::CAPTION))
-        .font_weight(FontWeight::SEMIBOLD)
-        .text_color(rgba(color::TEXT_SECONDARY))
-        .child("T")
+                .child(crate::tooltip_ui::keycap("T")),
+            hint,
+            crate::tooltip_ui::Placement::Below,
+        ))
 }

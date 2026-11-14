@@ -167,6 +167,10 @@ impl CameraWindow {
             .right_0()
             .flex()
             .justify_center()
-            .child(button)
+            .child(crate::tooltip_ui::control(
+                button,
+                self.shortcut_hint(crate::app_core::tooltips::Control::Shutter),
+                crate::tooltip_ui::Placement::Above,
+            ))
     }
 }

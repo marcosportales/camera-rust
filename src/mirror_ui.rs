@@ -12,6 +12,7 @@ use crate::theme::{color, radius, size, space};
 /// Draw the 48 px Mirror button 40 px right of the Shutter, preserving existing control locks.
 pub fn control(
     state: &AppState,
+    hint: Option<crate::app_core::tooltips::Hint>,
     on_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
 ) -> impl IntoElement {
     let lock = state.control_lock();
@@ -25,7 +26,11 @@ pub fn control(
         .left(relative(0.5))
         .ml(px(size::SHUTTER / 2.0 + space::S40))
         .bottom(px(space::S24 + (size::SHUTTER - size::MIRROR) / 2.0))
-        .child(button)
+        .child(crate::tooltip_ui::control(
+            button,
+            hint,
+            crate::tooltip_ui::Placement::Above,
+        ))
 }
 
 /// Style the Mirror button and icon with the current value and availability.

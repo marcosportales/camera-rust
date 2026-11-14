@@ -49,6 +49,18 @@ impl ControlsVisibility {
 }
 
 impl CameraWindow {
+    /// Suppress shortcut tooltips as soon as controls stop accepting interaction.
+    pub(super) fn shortcut_hint(
+        &self,
+        control: crate::app_core::tooltips::Control,
+    ) -> Option<crate::app_core::tooltips::Hint> {
+        self.controls_visibility
+            .core
+            .interactive()
+            .then(|| self.state.shortcut_hint(control))
+            .flatten()
+    }
+
     /// Connect mouse or state changes to the owned visibility clock.
     pub(super) fn sync_controls(&mut self, movement: bool, cx: &mut Context<Self>) {
         self.controls_visibility.sync(&self.state, movement, cx);
@@ -73,6 +85,7 @@ impl CameraWindow {
             .child(self.shutter(cx))
             .child(crate::mirror_ui::control(
                 &self.state,
+                self.shortcut_hint(crate::app_core::tooltips::Control::Mirror),
                 cx.listener(|this, _, window, cx| this.toggle_mirror(window, cx)),
             ))
             .child(self.mode_pill(cx))

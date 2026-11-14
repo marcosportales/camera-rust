@@ -98,6 +98,7 @@ fn error_text(title: &'static str, message: String) -> Div {
         .child(
             div()
                 .text_size(px(font::TITLE))
+                .line_height(px(24.))
                 .font_weight(FontWeight::SEMIBOLD)
                 .text_color(rgba(color::TEXT_PRIMARY))
                 .child(title),

@@ -10,7 +10,7 @@
 
 **GPUI references:** Key binding (M): [`key_dispatch.md`](https://github.com/zed-industries/zed/blob/main/crates/gpui/docs/key_dispatch.md).
 
-- [ ] Mirror button right of the Shutter at 40 px (`space.40`) gap, `size::MIRROR` (48) circle (`radius::FULL`), fill `color::CONTROL_HOVER` when off as in `01-ready-photo.html`, `flip-horizontal` icon (`icon.lg`).
+- [x] Mirror button right of the Shutter at 40 px (`space.40`) gap, `size::MIRROR` (48) circle (`radius::FULL`), fill `color::CONTROL_HOVER` when off as in `01-ready-photo.html`, `flip-horizontal` icon (`icon.lg`).
 - [x] Mirror is on at startup; "on" look is `color::CONTROL_ON` fill, never the red accent.
 - [x] Clicking the button, or pressing M, toggles Mirror and flips the Viewfinder image horizontally. Mirror is a view-only transform.
 - [x] A Photo taken with Mirror on is identical to one taken with Mirror off (test: the saved JPEG bytes equal the unflipped source frame).

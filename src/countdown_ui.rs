@@ -6,13 +6,12 @@ use gpui::{
 };
 use std::sync::Arc;
 
-/// Dim the Viewfinder during countdown, otherwise use the ready screen top scrim.
+/// Dim the Viewfinder during countdown.
 pub fn backdrop(active: bool) -> impl IntoElement {
     div()
         .absolute()
         .size_full()
         .when(active, |layer| layer.bg(rgba(color::DIM)))
-        .when(!active, |layer| layer.child(crate::overlays::scrim_top()))
 }
 
 /// Display a tabular numeral and its cancellation hint at the design's 112px top offset.

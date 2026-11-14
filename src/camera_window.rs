@@ -171,13 +171,7 @@ fn after(
 
 /// Detect the camera and start the Viewfinder at the default Resolution, recording the outcome in `state`.
 fn start_camera(camera: &mut impl CameraBackend, state: &mut AppState) {
-    state.handle(camera.detect_cameras().into());
-    let Some(resolution) = state.resolution else {
-        return;
-    };
-    if let Err(error) = camera.start_viewfinder(resolution) {
-        state.handle(Event::CameraFailed(error));
-    }
+    state.retry_camera(camera);
 }
 
 /// Show each frame the camera sends until the window or the camera goes away.
@@ -233,7 +227,13 @@ impl Render for CameraWindow {
         self.sync_controls(false, cx);
         let root = self.root(cx);
         let CameraState::Ready(camera) = &self.state.camera else {
-            return root;
+            return root.children(crate::error_ui::screen(
+                &self.state,
+                cx.listener(|this, _, _, cx| {
+                    this.state.retry_camera(&mut this.camera);
+                    cx.notify();
+                }),
+            ));
         };
         let root = root
             .bg(rgba(color::LETTERBOX))

@@ -1,10 +1,12 @@
 //! Last-Capture Thumbnail visuals, independent of the window and capture IO.
 
+mod photo;
+
 use std::path::Path;
 
 use gpui::{
-    App, ClickEvent, Div, IntoElement, ObjectFit, Stateful, Window, div, img, prelude::*, px,
-    relative, rgba, svg,
+    App, ClickEvent, Div, IntoElement, Stateful, Window, div, img, prelude::*, px, relative, rgba,
+    svg,
 };
 
 use crate::theme::{color, radius, size, space};
@@ -54,9 +56,8 @@ fn button(photo: Option<&Path>, just_saved: bool) -> Stateful<Div> {
             )
         })
         .children(photo.map(|path| {
-            img(path.to_path_buf())
+            img(photo::source(path.to_path_buf()))
                 .size_full()
                 .rounded(px(radius::MD - 1.5))
-                .object_fit(ObjectFit::Cover)
         }))
 }

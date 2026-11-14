@@ -117,23 +117,33 @@ impl CameraBackend for GstCamera {
         Ok(())
     }
 
-    /// Write the newest MJPG frame to `folder` as it came from the camera, without re-encoding.
-    fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError> {
+    /// Save the newest MJPG frame, baking in Mirror when enabled and preserving source bytes otherwise.
+    fn take_photo(&mut self, folder: &Path, mirror: bool) -> Result<PathBuf, PhotoError> {
         let buffer = lock(&self.jpeg).latest.clone().ok_or(PhotoError)?;
         let jpeg = buffer.map_readable().map_err(|_| PhotoError)?;
-        capture_store::save_jpeg(folder, &jpeg, Local::now()).map_err(|error| {
+        let mirrored;
+        let bytes = if mirror {
+            mirrored = crate::photo_jpeg::mirrored(&jpeg).map_err(|error| {
+                eprintln!("Could not mirror the photo: {error}");
+                PhotoError
+            })?;
+            mirrored.as_slice()
+        } else {
+            &jpeg
+        };
+        capture_store::save_jpeg(folder, bytes, Local::now()).map_err(|error| {
             eprintln!("Could not save the photo: {error}");
             PhotoError
         })
     }
 
     /// Reserve the Video's file in `folder` and start recording the camera's frames into it.
-    fn start_video(&mut self, folder: &Path) -> Result<PathBuf, VideoError> {
+    fn start_video(&mut self, folder: &Path, mirror: bool) -> Result<PathBuf, VideoError> {
         let path = capture_store::reserve_video(folder, Local::now()).map_err(|error| {
             eprintln!("Could not create the video file: {error}");
             VideoError
         })?;
-        let recording = self.recorder.start(&path).map_err(|error| {
+        let recording = self.recorder.start(&path, mirror).map_err(|error| {
             eprintln!("Could not start the video: {error:#}");
             let _ = fs::remove_file(&path);
             VideoError
@@ -298,6 +308,10 @@ fn fixed_size(structure: &gst::StructureRef) -> Option<Resolution> {
 mod recording_tests;
 
 #[cfg(test)]
+#[path = "gst_camera/mirror_tests.rs"]
+mod mirror_tests;
+
+#[cfg(test)]
 mod tests {
     use super::recording_tests::test_recorder;
     use super::*;
@@ -320,36 +334,6 @@ mod tests {
             .parse()
             .unwrap();
         assert_eq!(mjpg_resolutions(&caps), [res(1280, 720), res(640, 360)]);
-    }
-
-    /// Photos retain the asymmetric source JPEG byte for byte with Mirror both on and off.
-    #[test]
-    fn mirror_never_changes_saved_jpeg_bytes() {
-        use crate::app_core::state::{AppState, CaptureOutcome, Event};
-        gst::init().unwrap();
-        let mut source = Vec::new();
-        image::codecs::jpeg::JpegEncoder::new(&mut source)
-            .encode(
-                &[255, 0, 0, 0, 0, 255],
-                2,
-                1,
-                image::ExtendedColorType::Rgb8,
-            )
-            .unwrap();
-        let (frames_tx, _frames_rx) = mpsc::channel(0);
-        let mut camera = GstCamera::new(frames_tx, test_recorder());
-        lock(&camera.jpeg).latest = Some(gst::Buffer::from_slice(source.clone()));
-        let folder = tempfile::tempdir().unwrap();
-        let mut state = AppState::new();
-        for mirror in [true, false] {
-            assert_eq!(state.mirror, mirror);
-            state.take_photo(&mut camera, folder.path());
-            let Some(CaptureOutcome::PhotoSaved(path)) = &state.last_capture else {
-                panic!("Photo was not saved");
-            };
-            assert_eq!(fs::read(path).unwrap(), source);
-            state.handle(Event::ToggleMirror);
-        }
     }
 
     /// The backend, fed by `videotestsrc` instead of a webcam, delivers BGRA frames at the requested Resolution.
@@ -387,7 +371,7 @@ mod tests {
 
         let deadline = Instant::now() + Duration::from_secs(5);
         let path = loop {
-            if let Ok(path) = camera.take_photo(folder.path()) {
+            if let Ok(path) = camera.take_photo(folder.path(), false) {
                 break path;
             }
             assert!(Instant::now() < deadline, "no photo within 5 s");

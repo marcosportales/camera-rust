@@ -1,5 +1,7 @@
 # 13: Mirror
 
+> **User override (2026-11-14):** [Special ticket 21](21-save-captures-with-mirror.md) supersedes this ticket's original no-Mirror/no-re-encoding rules for Captures. Saved Photos and Videos now follow the Mirror setting; the criteria below record the original implementation.
+
 **What to build:** A Mirror button and M shortcut flip the Viewfinder horizontally. Saved Captures are never flipped.
 
 **Blocked by:** 03

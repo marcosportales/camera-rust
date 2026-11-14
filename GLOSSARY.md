@@ -33,7 +33,7 @@ An optional countdown (off, 3s, 10s) between pressing the Shutter and the Captur
 _Avoid_: Delay, countdown
 
 **Mirror**:
-Horizontal flip of the Viewfinder so it behaves like a mirror.
+Horizontal flip of the Viewfinder so it behaves like a mirror, also applied to saved Photos and Videos when enabled (fixed at recording start for Videos). See [the user decision in ticket 21](.scratch/camera-app/issues/21-save-captures-with-mirror.md).
 _Avoid_: Flip, selfie mode
 
 **Resolution**:

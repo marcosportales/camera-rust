@@ -42,11 +42,11 @@ pub trait CameraBackend {
     /// Start the Viewfinder at the given Resolution.
     fn start_viewfinder(&mut self, resolution: Resolution) -> Result<(), CameraError>;
 
-    /// Save the current Viewfinder frame as a JPEG in `folder`, returning the file's path.
-    fn take_photo(&mut self, folder: &Path) -> Result<PathBuf, PhotoError>;
+    /// Save the current frame as a JPEG in `folder`, applying the requested Mirror orientation.
+    fn take_photo(&mut self, folder: &Path, mirror: bool) -> Result<PathBuf, PhotoError>;
 
-    /// Start recording a Video at the Viewfinder's Resolution into a new file in `folder`, returning its path.
-    fn start_video(&mut self, folder: &Path) -> Result<PathBuf, VideoError>;
+    /// Start a Video at the Viewfinder's Resolution and requested Mirror orientation in `folder`.
+    fn start_video(&mut self, folder: &Path, mirror: bool) -> Result<PathBuf, VideoError>;
 
     /// Stop the Video being recorded and close its file with an end-of-stream, in the background.
     fn stop_video(&mut self) -> VideoSaving;

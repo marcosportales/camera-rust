@@ -11,6 +11,7 @@ mod locked_controls;
 mod mirror_ui;
 mod mode_pill;
 mod overlays;
+mod photo_jpeg;
 mod photo_ui;
 mod recording_ui;
 mod timer_ui;

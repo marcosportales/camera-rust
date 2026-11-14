@@ -158,7 +158,7 @@ impl AppState {
         if self.video.is_some() {
             return;
         }
-        self.handle(camera.take_photo(folder).into());
+        self.handle(camera.take_photo(folder, self.mirror).into());
     }
 
     /// What the Shutter does: nothing until the camera is ready or while a Video saves, then stop a
@@ -180,7 +180,7 @@ impl AppState {
         if self.video.is_some() {
             return;
         }
-        let event = match camera.start_video(folder) {
+        let event = match camera.start_video(folder, self.mirror) {
             Ok(_) => Event::RecordingStarted,
             Err(VideoError) => Event::VideoFailed,
         };

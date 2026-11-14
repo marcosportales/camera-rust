@@ -61,6 +61,13 @@ pub struct GstCamera {
 }
 
 impl GstCamera {
+    /// Consume a runtime capture error once; the independent writer can still finalize its Video.
+    pub fn poll_camera_error(&mut self) -> Option<CameraError> {
+        let pipeline = self.pipeline.as_ref()?;
+        let message = pipeline.bus()?.pop_filtered(&[gst::MessageType::Error])?;
+        Some(camera_error(&message))
+    }
+
     /// A backend that sends Viewfinder frames to `frames` once started and records Videos with `recorder`.
     pub fn new(frames: Sender<Frame>, recorder: Recorder) -> Self {
         Self {

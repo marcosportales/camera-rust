@@ -79,6 +79,15 @@ impl CameraWindow {
     /// Stop the Video and its ticking, then wait in the background until its file is finalized.
     fn stop_recording(&mut self, cx: &mut Context<Self>) {
         let saving = self.state.stop_recording(&mut self.camera);
+        self.await_saving(saving, cx);
+    }
+
+    /// Observe a finalization started by the Shutter, camera loss, or window close.
+    pub(super) fn await_saving(
+        &mut self,
+        saving: Option<crate::app_core::backend::VideoSaving>,
+        cx: &mut Context<Self>,
+    ) {
         self.recording_clock = None;
         if let Some(saving) = saving {
             cx.spawn(async move |this, cx| {
@@ -94,6 +103,10 @@ impl CameraWindow {
     /// The stopped Video is finalized (or failed): toast it; the Shutter returns to its Video Mode look.
     fn finish_saving(&mut self, outcome: Result<PathBuf, VideoError>, cx: &mut Context<Self>) {
         self.state.handle(outcome.into());
+        if self.state.can_exit() {
+            cx.quit();
+            return;
+        }
         self.show_feedback(false, cx);
         cx.notify();
     }

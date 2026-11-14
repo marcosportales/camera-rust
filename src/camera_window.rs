@@ -2,6 +2,7 @@
 
 mod auto_hide;
 mod countdown;
+mod lifecycle;
 mod resolution;
 mod settings;
 mod shutter;
@@ -84,6 +85,7 @@ impl CameraWindow {
             show_frames(this, frames_rx, cx).await
         })
         .detach();
+        Self::watch_lifecycle(window, cx);
         let focus = cx.focus_handle();
         window.focus(&focus);
         Self {

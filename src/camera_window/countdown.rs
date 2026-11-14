@@ -1,10 +1,10 @@
-//! Schedule Photo Timer updates; dropping the task cancels pending wakeups.
+//! Schedule Capture Timer updates; dropping the task cancels pending wakeups.
 use super::CameraWindow;
 use crate::app_core::state::ShutterAction;
 use gpui::{Context, Task};
 use std::time::{Duration, Instant};
 
-/// The monotonic origin and owned task for this window's Photo Timer.
+/// The monotonic origin and owned task for this window's Capture Timer.
 pub(super) struct CountdownClock {
     origin: Instant,
     task: Option<Task<()>>,
@@ -43,8 +43,10 @@ impl CameraWindow {
                     cx.background_executor().timer(Duration::from_secs(1)).await;
                     let running = this.update(cx, |view, cx| {
                         let action = view.state.advance_countdown(view.countdown_clock.now());
-                        if action == Some(ShutterAction::TakePhoto) {
-                            view.take_photo(cx);
+                        match action {
+                            Some(ShutterAction::TakePhoto) => view.take_photo(cx),
+                            Some(ShutterAction::StartRecording) => view.start_recording(cx),
+                            _ => {}
                         }
                         cx.notify();
                         view.state.countdown_numeral().is_some()

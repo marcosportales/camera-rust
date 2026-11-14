@@ -47,17 +47,17 @@ pub fn newest_capture(photos: &Path, videos: &Path) -> Option<PathBuf> {
         .map(|(_, path)| path)
 }
 
-/// Resolve the displayed Photo's folder, or the existing Photos folder for an empty Thumbnail.
-pub fn thumbnail_folder(photo: Option<&Path>, photos: &Path) -> Option<PathBuf> {
-    match photo {
+/// Resolve the displayed Capture's folder, or the existing Photos folder for an empty Thumbnail.
+pub fn thumbnail_folder(capture: Option<&Path>, photos: &Path) -> Option<PathBuf> {
+    match capture {
         Some(path) => path.parent().map(Path::to_path_buf),
         None => photos.is_dir().then(|| photos.to_path_buf()),
     }
 }
 
 /// Open the Thumbnail's folder through the system opener, silently ignoring unavailable openers.
-pub fn open_thumbnail_folder(photo: Option<&Path>) {
-    let Some(folder) = thumbnail_folder(photo, &photos_folder()) else {
+pub fn open_thumbnail_folder(capture: Option<&Path>) {
+    let Some(folder) = thumbnail_folder(capture, &photos_folder()) else {
         return;
     };
     // Wait off the UI thread and reap the opener process when it exits.
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(newest_capture(&photos, &videos), Some(photo));
     }
 
-    /// A newer Video wins even though this ticket cannot display Video thumbnails.
+    /// A newer Video wins over Photos, ignoring unsupported files and directories.
     #[test]
     fn newest_capture_chooses_video_and_ignores_other_files_and_directories() {
         let root = tempfile::tempdir().unwrap();
@@ -201,6 +201,11 @@ mod tests {
         let other = root.path().join("Other");
         let photo = other.join("photo.jpg");
         assert_eq!(thumbnail_folder(Some(&photo), &photos), Some(other));
+        let videos = root.path().join("Videos");
+        assert_eq!(
+            thumbnail_folder(Some(&videos.join("video.mp4")), &photos),
+            Some(videos)
+        );
     }
 
     /// 2026-11-12 09:05:07 local time.

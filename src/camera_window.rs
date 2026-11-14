@@ -32,7 +32,8 @@ actions!(
         SelectPhoto,
         SelectVideo,
         CycleTimer,
-        CloseTimerMenu
+        CloseTimerMenu,
+        ToggleMirror
     ]
 );
 
@@ -93,14 +94,35 @@ impl CameraWindow {
 
     /// Show `frame` instead of the current one, freeing the texture of the frame before that.
     fn show(&mut self, frame: Frame, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(image) = render_image(frame) else {
+        let Some(image) = crate::viewfinder::render_image(frame, self.state.mirror) else {
             return;
         };
+        self.replace_frame(image, window, cx);
+    }
+
+    /// Replace the displayed image and retire its texture one frame late.
+    fn replace_frame(&mut self, image: RenderImage, window: &mut Window, cx: &mut Context<Self>) {
         let shown = self.frame.replace(Arc::new(image));
         if let Some(stale) = std::mem::replace(&mut self.previous_frame, shown) {
             cx.drop_image(stale, Some(window));
         }
         cx.notify();
+    }
+
+    /// Apply the shared Mirror event and reverse the current displayed frame if it changed.
+    fn toggle_mirror(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let was_mirrored = self.state.mirror;
+        self.state.handle(Event::ToggleMirror);
+        if self.state.mirror != was_mirrored {
+            if let Some(image) = self
+                .frame
+                .as_deref()
+                .and_then(crate::viewfinder::flipped_image)
+            {
+                self.replace_frame(image, window, cx);
+            }
+            cx.notify();
+        }
     }
 
     /// Switch to `mode`; does nothing if it is already active, the camera is not ready, or a Video records.
@@ -159,12 +181,6 @@ async fn show_frames(
     }
 }
 
-/// Wrap a BGRA frame as a GPUI image (GPUI's `RenderImage` stores BGRA bytes).
-fn render_image(frame: Frame) -> Option<RenderImage> {
-    let buffer = image::RgbaImage::from_raw(frame.size.width, frame.size.height, frame.bgra)?;
-    Some(RenderImage::new([image::Frame::new(buffer)]))
-}
-
 impl CameraWindow {
     /// The root surface and keyboard actions, scoped to the Camera window's focus.
     fn root(&self, cx: &mut Context<Self>) -> Div {
@@ -184,6 +200,9 @@ impl CameraWindow {
             .on_action(cx.listener(|this, _: &CloseTimerMenu, _, cx| {
                 this.cancel_countdown(cx);
                 this.timer_event(Event::CloseTimerMenu, cx);
+            }))
+            .on_action(cx.listener(|this, _: &ToggleMirror, window, cx| {
+                this.toggle_mirror(window, cx);
             }))
             .size_full()
             .relative()
@@ -210,6 +229,10 @@ impl Render for CameraWindow {
             .child(scrim_bottom())
             .child(camera_label(SharedString::from(camera.name.clone())))
             .child(self.shutter(cx))
+            .child(crate::mirror_ui::control(
+                &self.state,
+                cx.listener(|this, _, window, cx| this.toggle_mirror(window, cx)),
+            ))
             .child(self.mode_pill(cx))
             .child(self.timer_controls(window, cx));
         if let Some(numeral) = self.state.countdown_numeral() {

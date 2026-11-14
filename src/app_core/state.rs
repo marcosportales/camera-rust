@@ -53,6 +53,9 @@ pub enum Event {
     CameraFailed(CameraError),
     SetMode(Mode),
     CycleTimer,
+    ToggleTimerMenu,
+    CloseTimerMenu,
+    SetTimer(Timer),
     ToggleMirror,
     PhotoSaved(PathBuf),
     PhotoFailed,
@@ -110,6 +113,7 @@ impl From<Result<PathBuf, VideoError>> for Event {
 pub struct AppState {
     pub mode: Mode,
     pub timer: Timer,
+    pub timer_menu_open: bool,
     pub mirror: bool,
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
@@ -123,6 +127,7 @@ impl AppState {
         Self {
             mode: Mode::Photo,
             timer: Timer::Off,
+            timer_menu_open: false,
             mirror: true,
             resolution: None,
             camera: CameraState::Detecting,
@@ -194,6 +199,12 @@ impl AppState {
             Event::SetMode(mode) if self.video.is_none() => self.mode = mode,
             Event::SetMode(_) => {}
             Event::CycleTimer => self.timer = self.timer.next(),
+            Event::ToggleTimerMenu => self.timer_menu_open = !self.timer_menu_open,
+            Event::CloseTimerMenu => self.timer_menu_open = false,
+            Event::SetTimer(timer) => {
+                self.timer = timer;
+                self.timer_menu_open = false;
+            }
             Event::ToggleMirror => self.mirror = !self.mirror,
             Event::PhotoSaved(path) => self.last_capture = Some(CaptureOutcome::PhotoSaved(path)),
             Event::PhotoFailed => self.last_capture = Some(CaptureOutcome::PhotoFailed),
@@ -316,6 +327,48 @@ mod tests {
             seen.push(state.timer);
         }
         assert_eq!(seen, [Timer::ThreeSeconds, Timer::TenSeconds, Timer::Off]);
+    }
+
+    /// Choosing any Timer value applies it and dismisses its menu.
+    #[test]
+    fn timer_selection_sets_the_value_and_closes_the_menu() {
+        let mut state = AppState::new();
+        for timer in [Timer::TenSeconds, Timer::ThreeSeconds, Timer::Off] {
+            state.handle(Event::ToggleTimerMenu);
+            assert!(state.timer_menu_open);
+            state.handle(Event::SetTimer(timer));
+            assert_eq!(state.timer, timer);
+            assert!(!state.timer_menu_open);
+        }
+    }
+
+    /// Esc and outside clicks dismiss the menu without altering the selected Timer.
+    #[test]
+    fn closing_the_timer_menu_preserves_the_selection() {
+        let mut state = AppState::new();
+        state.handle(Event::SetTimer(Timer::ThreeSeconds));
+        state.handle(Event::ToggleTimerMenu);
+        state.handle(Event::CloseTimerMenu);
+        assert!(!state.timer_menu_open);
+        assert_eq!(state.timer, Timer::ThreeSeconds);
+        let before = state.clone();
+        state.handle(Event::CloseTimerMenu);
+        assert_eq!(state, before);
+    }
+
+    /// Cycling while the menu is open updates its selected value without dismissing it.
+    #[test]
+    fn timer_cycles_with_the_menu_open_and_the_button_can_toggle_it_closed() {
+        let mut state = AppState::new();
+        state.handle(Event::ToggleTimerMenu);
+        for timer in [Timer::ThreeSeconds, Timer::TenSeconds, Timer::Off] {
+            state.handle(Event::CycleTimer);
+            assert_eq!(state.timer, timer);
+            assert!(state.timer_menu_open);
+        }
+        state.handle(Event::ToggleTimerMenu);
+        assert!(!state.timer_menu_open);
+        assert_eq!(state.timer, Timer::Off);
     }
 
     #[test]

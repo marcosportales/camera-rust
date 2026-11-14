@@ -1,6 +1,9 @@
 //! Bookkeeping of the transient feedback of the Camera window: the Photo flash, the Capture toast, and the Mode switch.
 
+use std::time::Instant;
+
 use crate::app_core::state::Mode;
+use crate::theme::motion;
 
 /// Which flash and toast are on screen. Ids grow with every Capture, so each one restarts its animation.
 #[derive(Debug, Default)]
@@ -64,6 +67,42 @@ impl ModeTransition {
     pub fn switched_from(&mut self, from: Mode) {
         self.previous = from;
         self.switches += 1;
+    }
+}
+
+/// The menu's opacity fade, retaining its current opacity when reversed mid-animation.
+pub struct MenuFade {
+    from: f32,
+    to: f32,
+    started: Instant,
+}
+
+impl MenuFade {
+    /// A fully hidden menu.
+    pub fn new() -> Self {
+        Self {
+            from: 0.0,
+            to: 0.0,
+            started: Instant::now(),
+        }
+    }
+
+    /// Fade towards the menu's new visibility over `motion::MENU`.
+    pub fn retarget(&mut self, open: bool) {
+        self.from = self.opacity();
+        self.to = if open { 1.0 } else { 0.0 };
+        self.started = Instant::now();
+    }
+
+    /// The current opacity, held at the target once the fade finishes.
+    pub fn opacity(&self) -> f32 {
+        let progress = (self.started.elapsed().as_secs_f32() / motion::MENU.as_secs_f32()).min(1.0);
+        self.from + (self.to - self.from) * progress
+    }
+
+    /// Whether another frame is needed to advance the fade.
+    pub fn animating(&self) -> bool {
+        self.from != self.to && self.started.elapsed() < motion::MENU
     }
 }
 

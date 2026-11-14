@@ -11,6 +11,7 @@ mod mode_pill;
 mod overlays;
 mod photo_ui;
 mod recording_ui;
+mod timer_ui;
 // Verbatim copy of the design tokens page; later tickets consume the constants.
 #[allow(dead_code)]
 #[rustfmt::skip]
@@ -21,7 +22,9 @@ use gpui::{
 };
 
 use assets::Assets;
-use camera_window::{CameraWindow, KEY_CONTEXT, PressShutter, SelectPhoto, SelectVideo};
+use camera_window::{
+    CameraWindow, CloseTimerMenu, CycleTimer, KEY_CONTEXT, PressShutter, SelectPhoto, SelectVideo,
+};
 
 /// Default window size in logical px.
 const WINDOW_WIDTH: f32 = 960.0;
@@ -35,6 +38,8 @@ fn main() {
             KeyBinding::new("space", PressShutter, Some(KEY_CONTEXT)),
             KeyBinding::new("p", SelectPhoto, Some(KEY_CONTEXT)),
             KeyBinding::new("v", SelectVideo, Some(KEY_CONTEXT)),
+            KeyBinding::new("t", CycleTimer, Some(KEY_CONTEXT)),
+            KeyBinding::new("escape", CloseTimerMenu, Some(KEY_CONTEXT)),
         ]);
 
         // Quit on the last window close so the process exits with code 0.

@@ -15,7 +15,6 @@ pub fn button(resolution: Resolution, open: bool, lock: Option<ControlLock>) -> 
     });
     let button = div()
         .id("resolution")
-        .occlude()
         .h(px(size::CONTROL))
         .px(px(space::S12))
         .flex()

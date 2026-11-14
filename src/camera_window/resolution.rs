@@ -26,13 +26,15 @@ impl CameraWindow {
         let opacity = self.resolution_menu_fade.opacity();
         div()
             .relative()
-            .child(
+            .child(crate::tooltip_ui::control(
                 resolution_ui::button(resolution, open, lock).when(lock.is_none(), |button| {
                     button.on_click(cx.listener(|this, _, _, cx| {
                         this.settings_event(Event::ToggleResolutionMenu, cx);
                     }))
                 }),
-            )
+                self.shortcut_hint(crate::app_core::tooltips::Control::Resolution),
+                crate::tooltip_ui::Placement::Below,
+            ))
             .when(lock.is_none() && (open || opacity > 0.0), |control| {
                 control.child(resolution_ui::menu(opacity).children(
                     self.state.resolution_choices().into_iter().map(|choice| {

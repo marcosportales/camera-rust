@@ -17,6 +17,14 @@ use crate::theme::space;
 const TICK: Duration = Duration::from_secs(1);
 
 impl CameraWindow {
+    /// Keep Capture outcome feedback visible on both the Viewfinder and camera error screens.
+    pub(super) fn capture_toast(&self) -> Option<impl IntoElement> {
+        self.feedback
+            .toast
+            .zip(self.state.last_capture.as_ref())
+            .map(|(id, outcome)| photo_ui::toast(id, outcome))
+    }
+
     /// Take a Photo, or start or stop a Video, depending on the Mode and whether a Video is recording.
     pub(super) fn press_shutter(&mut self, cx: &mut Context<Self>) {
         match self.state.press_shutter(self.countdown_clock.now()) {

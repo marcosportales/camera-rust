@@ -68,6 +68,19 @@ impl GstCamera {
     pub fn poll_camera_error(&mut self) -> Option<CameraError> {
         let pipeline = self.pipeline.as_ref()?;
         let message = pipeline.bus()?.pop_filtered(&[gst::MessageType::Error])?;
+        if let gst::MessageView::Error(error) = message.view()
+            && let Some(source) = error
+                .src()
+                .and_then(|source| source.downcast_ref::<gst::Element>())
+            && source
+                .factory()
+                .is_some_and(|factory| factory.name() == "v4l2src")
+        {
+            let device: String = source.property("device");
+            if !Path::new(&device).exists() {
+                return Some(CameraError::NoCamera);
+            }
+        }
         Some(camera_error(&message))
     }
 

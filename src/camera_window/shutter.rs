@@ -51,7 +51,7 @@ impl CameraWindow {
     }
 
     /// Start a Video and advance its elapsed time every second until it stops; a failed start toasts.
-    fn start_recording(&mut self, cx: &mut Context<Self>) {
+    pub(super) fn start_recording(&mut self, cx: &mut Context<Self>) {
         self.state
             .start_recording(&mut self.camera, &videos_folder());
         if self.state.recording().is_none() {

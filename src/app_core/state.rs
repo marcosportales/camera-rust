@@ -50,6 +50,7 @@ pub enum CameraState {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event {
     StartCountdown {
+        action: ShutterAction,
         now: std::time::Duration,
         seconds: u64,
     },
@@ -198,9 +199,14 @@ impl AppState {
     /// Apply an event to the state.
     pub fn handle(&mut self, event: Event) {
         match event {
-            Event::StartCountdown { now, seconds } => {
+            Event::StartCountdown {
+                now,
+                seconds,
+                action,
+            } => {
                 self.timer_menu_open = false;
                 self.countdown = Some(super::countdown::Countdown {
+                    action,
                     deadline: now + std::time::Duration::from_secs(seconds),
                     remaining: seconds as u8,
                 });

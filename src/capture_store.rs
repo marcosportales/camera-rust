@@ -24,6 +24,53 @@ fn camera_subfolder(xdg_dir: Option<PathBuf>, fallback: &str) -> PathBuf {
     parent.join("Camera")
 }
 
+/// Find the most recently modified Photo or Video, ignoring missing folders and unreadable entries.
+pub fn newest_capture(photos: &Path, videos: &Path) -> Option<PathBuf> {
+    [(photos, "jpg"), (videos, "mp4")]
+        .into_iter()
+        .flat_map(|(folder, extension)| {
+            fs::read_dir(folder)
+                .into_iter()
+                .flatten()
+                .filter_map(Result::ok)
+                .filter_map(move |entry| {
+                    let path = entry.path();
+                    if path.extension()?.to_str()? != extension {
+                        return None;
+                    }
+                    let metadata = entry.metadata().ok()?;
+                    metadata.is_file().then_some(())?;
+                    Some((metadata.modified().ok()?, path))
+                })
+        })
+        .max()
+        .map(|(_, path)| path)
+}
+
+/// Resolve the displayed Photo's folder, or the existing Photos folder for an empty Thumbnail.
+pub fn thumbnail_folder(photo: Option<&Path>, photos: &Path) -> Option<PathBuf> {
+    match photo {
+        Some(path) => path.parent().map(Path::to_path_buf),
+        None => photos.is_dir().then(|| photos.to_path_buf()),
+    }
+}
+
+/// Open the Thumbnail's folder through the system opener, silently ignoring unavailable openers.
+pub fn open_thumbnail_folder(photo: Option<&Path>) {
+    let Some(folder) = thumbnail_folder(photo, &photos_folder()) else {
+        return;
+    };
+    // Wait off the UI thread and reap the opener process when it exits.
+    std::thread::spawn(move || {
+        let _ = std::process::Command::new("xdg-open")
+            .arg(folder)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+    });
+}
+
 /// Write `jpeg` to a new `YYYY-MM-DD_HH-MM-SS.jpg` in `folder`, creating the folder if missing.
 ///
 /// A name that is taken gets `_1`, `_2`, … before the extension; an existing file is never overwritten.
@@ -83,6 +130,78 @@ pub fn display_folder(folder: &Path) -> String {
 mod tests {
     use super::*;
     use chrono::TimeZone;
+
+    /// Modification times, rather than filenames, choose the newest supported Capture.
+    #[test]
+    fn newest_capture_chooses_photo_over_older_video() {
+        let root = tempfile::tempdir().unwrap();
+        let photos = root.path().join("Photos");
+        let videos = root.path().join("Videos");
+        fs::create_dir_all(&photos).unwrap();
+        fs::create_dir_all(&videos).unwrap();
+        let photo = photos.join("a.jpg");
+        let video = videos.join("z.mp4");
+        fs::write(&photo, b"photo").unwrap();
+        fs::write(&video, b"video").unwrap();
+        let earlier = std::time::UNIX_EPOCH + std::time::Duration::from_secs(100);
+        fs::File::open(&video)
+            .unwrap()
+            .set_modified(earlier)
+            .unwrap();
+        assert_eq!(newest_capture(&photos, &videos), Some(photo));
+    }
+
+    /// A newer Video wins even though this ticket cannot display Video thumbnails.
+    #[test]
+    fn newest_capture_chooses_video_and_ignores_other_files_and_directories() {
+        let root = tempfile::tempdir().unwrap();
+        let photo = root.path().join("z.jpg");
+        let video = root.path().join("a.mp4");
+        fs::write(&photo, b"photo").unwrap();
+        fs::write(&video, b"video").unwrap();
+        let earlier = std::time::UNIX_EPOCH + std::time::Duration::from_secs(100);
+        fs::File::open(&photo)
+            .unwrap()
+            .set_modified(earlier)
+            .unwrap();
+        fs::write(root.path().join("new.txt"), b"ignore").unwrap();
+        fs::create_dir(root.path().join("directory.jpg")).unwrap();
+        assert_eq!(newest_capture(root.path(), root.path()), Some(video));
+    }
+
+    /// Missing and empty folders produce the empty state without preventing the other folder scan.
+    #[test]
+    fn newest_capture_handles_missing_and_empty_folders() {
+        let root = tempfile::tempdir().unwrap();
+        let photos = root.path().join("Photos");
+        let videos = root.path().join("Videos");
+        assert_eq!(newest_capture(&photos, &videos), None);
+        fs::create_dir(&photos).unwrap();
+        fs::create_dir(&videos).unwrap();
+        assert_eq!(newest_capture(&photos, &videos), None);
+        fs::remove_dir(&videos).unwrap();
+        let photo = photos.join("photo.jpg");
+        fs::write(&photo, b"photo").unwrap();
+        assert_eq!(newest_capture(&photos, &videos), Some(photo));
+        fs::remove_dir_all(&photos).unwrap();
+        fs::create_dir(&videos).unwrap();
+        let video = videos.join("video.mp4");
+        fs::write(&video, b"video").unwrap();
+        assert_eq!(newest_capture(&photos, &videos), Some(video));
+    }
+
+    /// Empty thumbnails open Photos only when it exists; displayed Photos open their own folder.
+    #[test]
+    fn thumbnail_folder_matches_the_displayed_photo_or_existing_photos_folder() {
+        let root = tempfile::tempdir().unwrap();
+        let photos = root.path().join("Photos");
+        assert_eq!(thumbnail_folder(None, &photos), None);
+        fs::create_dir(&photos).unwrap();
+        assert_eq!(thumbnail_folder(None, &photos), Some(photos.clone()));
+        let other = root.path().join("Other");
+        let photo = other.join("photo.jpg");
+        assert_eq!(thumbnail_folder(Some(&photo), &photos), Some(other));
+    }
 
     /// 2026-11-12 09:05:07 local time.
     fn sample_time() -> DateTime<Local> {

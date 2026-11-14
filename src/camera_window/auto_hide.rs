@@ -83,6 +83,7 @@ impl CameraWindow {
             .child(crate::overlays::scrim_top())
             .child(crate::overlays::scrim_bottom())
             .child(self.shutter(cx))
+            .child(self.thumbnail(cx))
             .child(crate::mirror_ui::control(
                 &self.state,
                 self.shortcut_hint(crate::app_core::tooltips::Control::Mirror),

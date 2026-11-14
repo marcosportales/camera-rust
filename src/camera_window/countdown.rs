@@ -37,6 +37,8 @@ impl CameraWindow {
     pub(super) fn sync_countdown(&mut self, cx: &mut Context<Self>) {
         self.countdown_clock.task = None;
         self.timer_menu_fade.retarget(self.state.timer_menu_open);
+        self.resolution_menu_fade
+            .retarget(self.state.resolution_menu_open);
         if self.state.countdown_numeral().is_some() {
             self.countdown_clock.task = Some(cx.spawn(async move |this, cx| {
                 loop {

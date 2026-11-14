@@ -1,8 +1,9 @@
 //! The Camera window: the Viewfinder filling the window, with the camera name top left.
 
 mod countdown;
+mod resolution;
+mod settings;
 mod shutter;
-mod timer;
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -49,6 +50,7 @@ pub struct CameraWindow {
     feedback: CaptureFeedback,
     mode_transition: ModeTransition,
     timer_menu_fade: MenuFade,
+    resolution_menu_fade: MenuFade,
     shutter_hovered: bool,
     shutter_pressed: bool,
     shutter_fill: FillTransition,
@@ -82,6 +84,7 @@ impl CameraWindow {
             feedback: CaptureFeedback::default(),
             mode_transition: ModeTransition::new(),
             timer_menu_fade: MenuFade::new(),
+            resolution_menu_fade: MenuFade::new(),
             shutter_hovered: false,
             shutter_pressed: false,
             shutter_fill: FillTransition::new(),
@@ -195,11 +198,12 @@ impl CameraWindow {
                 cx.listener(|this, _: &SelectVideo, _, cx| this.select_mode(Mode::Video, cx)),
             )
             .on_action(cx.listener(|this, _: &CycleTimer, _, cx| {
-                this.timer_event(Event::CycleTimer, cx);
+                this.settings_event(Event::CycleTimer, cx);
             }))
             .on_action(cx.listener(|this, _: &CloseTimerMenu, _, cx| {
                 this.cancel_countdown(cx);
-                this.timer_event(Event::CloseTimerMenu, cx);
+                this.settings_event(Event::CloseTimerMenu, cx);
+                this.settings_event(Event::CloseResolutionMenu, cx);
             }))
             .on_action(cx.listener(|this, _: &ToggleMirror, window, cx| {
                 this.toggle_mirror(window, cx);
@@ -234,7 +238,7 @@ impl Render for CameraWindow {
                 cx.listener(|this, _, window, cx| this.toggle_mirror(window, cx)),
             ))
             .child(self.mode_pill(cx))
-            .child(self.timer_controls(window, cx));
+            .child(self.settings_controls(window, cx));
         if let Some(numeral) = self.state.countdown_numeral() {
             return root.child(crate::countdown_ui::countdown(numeral));
         }

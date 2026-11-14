@@ -108,6 +108,13 @@ impl CameraBackend for GstCamera {
 
     /// Start the pipeline at `resolution`, decoding frames into the UI channel.
     fn start_viewfinder(&mut self, resolution: Resolution) -> Result<(), CameraError> {
+        // V4L2 cannot be opened by two pipelines at once; release it before negotiating the new size.
+        if let Some(previous) = self.pipeline.take() {
+            previous
+                .set_state(gst::State::Null)
+                .map_err(|_| CameraError::NoCamera)?;
+        }
+        lock(&self.jpeg).latest = None;
         let source = self.source.as_deref().ok_or(CameraError::NoCamera)?;
         let pipeline = viewfinder_pipeline(source, resolution)?;
         send_frames_to(&pipeline, self.frames.clone())?;
@@ -302,6 +309,10 @@ fn fixed_size(structure: &gst::StructureRef) -> Option<Resolution> {
         height: dimension("height")?,
     })
 }
+
+#[cfg(test)]
+#[path = "gst_camera/resolution_tests.rs"]
+mod resolution_tests;
 
 #[cfg(test)]
 #[path = "gst_camera/recording_tests.rs"]

@@ -410,6 +410,15 @@ mod tests {
         assert!(state.mirror);
     }
 
+    /// A new app run starts with Mirror on even if the previous run switched it off.
+    #[test]
+    fn mirror_is_reset_on_each_run() {
+        let mut previous = AppState::new();
+        previous.handle(Event::ToggleMirror);
+        assert!(!previous.mirror);
+        assert!(AppState::new().mirror);
+    }
+
     #[test]
     fn a_saved_photo_is_recorded_with_its_path() {
         let path = PathBuf::from("/pics/Camera/a.jpg");

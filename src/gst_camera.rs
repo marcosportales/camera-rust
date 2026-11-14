@@ -322,6 +322,36 @@ mod tests {
         assert_eq!(mjpg_resolutions(&caps), [res(1280, 720), res(640, 360)]);
     }
 
+    /// Photos retain the asymmetric source JPEG byte for byte with Mirror both on and off.
+    #[test]
+    fn mirror_never_changes_saved_jpeg_bytes() {
+        use crate::app_core::state::{AppState, CaptureOutcome, Event};
+        gst::init().unwrap();
+        let mut source = Vec::new();
+        image::codecs::jpeg::JpegEncoder::new(&mut source)
+            .encode(
+                &[255, 0, 0, 0, 0, 255],
+                2,
+                1,
+                image::ExtendedColorType::Rgb8,
+            )
+            .unwrap();
+        let (frames_tx, _frames_rx) = mpsc::channel(0);
+        let mut camera = GstCamera::new(frames_tx, test_recorder());
+        lock(&camera.jpeg).latest = Some(gst::Buffer::from_slice(source.clone()));
+        let folder = tempfile::tempdir().unwrap();
+        let mut state = AppState::new();
+        for mirror in [true, false] {
+            assert_eq!(state.mirror, mirror);
+            state.take_photo(&mut camera, folder.path());
+            let Some(CaptureOutcome::PhotoSaved(path)) = &state.last_capture else {
+                panic!("Photo was not saved");
+            };
+            assert_eq!(fs::read(path).unwrap(), source);
+            state.handle(Event::ToggleMirror);
+        }
+    }
+
     /// The backend, fed by `videotestsrc` instead of a webcam, delivers BGRA frames at the requested Resolution.
     #[test]
     fn test_source_delivers_frames_at_the_requested_resolution() {

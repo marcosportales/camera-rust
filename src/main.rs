@@ -17,6 +17,7 @@ mod photo_jpeg;
 mod photo_ui;
 mod recording_ui;
 mod resolution_ui;
+mod thumbnail_ui;
 mod timer_ui;
 mod tooltip_ui;
 mod viewfinder;

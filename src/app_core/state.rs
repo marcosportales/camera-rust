@@ -66,6 +66,8 @@ pub enum Event {
     CloseResolutionMenu,
     SetTimer(Timer),
     ToggleMirror,
+    /// The newest Capture discovered on disk at startup.
+    CaptureFound(PathBuf),
     PhotoSaved(PathBuf),
     PhotoFailed,
     RecordingStarted,
@@ -129,6 +131,8 @@ pub struct AppState {
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
     pub last_capture: Option<CaptureOutcome>,
+    /// The newest saved Photo, independent of failed Capture feedback.
+    pub thumbnail_photo: Option<PathBuf>,
     pub video: Option<VideoCapture>,
 }
 
@@ -145,8 +149,15 @@ impl AppState {
             resolution: None,
             camera: CameraState::Detecting,
             last_capture: None,
+            thumbnail_photo: None,
             video: None,
         }
+    }
+
+    /// Whether the current Capture feedback describes the Photo shown in the Thumbnail.
+    pub fn thumbnail_just_saved(&self) -> bool {
+        matches!(&self.last_capture, Some(CaptureOutcome::PhotoSaved(path))
+            if self.thumbnail_photo.as_ref() == Some(path))
     }
 
     /// The Video being recorded, if one is (not while it is saving).
@@ -249,7 +260,14 @@ impl AppState {
                 self.resolution_menu_open = false;
             }
             Event::ToggleMirror => self.mirror = !self.mirror,
-            Event::PhotoSaved(path) => self.last_capture = Some(CaptureOutcome::PhotoSaved(path)),
+            Event::CaptureFound(path) => {
+                self.thumbnail_photo =
+                    (path.extension().is_some_and(|ext| ext == "jpg")).then_some(path);
+            }
+            Event::PhotoSaved(path) => {
+                self.thumbnail_photo = Some(path.clone());
+                self.last_capture = Some(CaptureOutcome::PhotoSaved(path));
+            }
             Event::PhotoFailed => self.last_capture = Some(CaptureOutcome::PhotoFailed),
             Event::RecordingStarted => {
                 self.timer_menu_open = false;
@@ -265,7 +283,10 @@ impl AppState {
                 self.video = Some(VideoCapture::Saving);
             }
             Event::RecordingStopped => {}
-            Event::VideoSaved(path) => self.finish_video(CaptureOutcome::VideoSaved(path)),
+            Event::VideoSaved(path) => {
+                self.thumbnail_photo = None;
+                self.finish_video(CaptureOutcome::VideoSaved(path));
+            }
             Event::VideoFailed => self.finish_video(CaptureOutcome::VideoFailed),
         }
     }
@@ -432,6 +453,27 @@ mod tests {
         previous.handle(Event::ToggleMirror);
         assert!(!previous.mirror);
         assert!(AppState::new().mirror);
+    }
+
+    /// Only confirmed saves replace the Thumbnail; failures preserve the previous Photo.
+    #[test]
+    fn thumbnail_updates_only_after_a_confirmed_save() {
+        let mut state = AppState::new();
+        let first = PathBuf::from("/photos/first.jpg");
+        state.handle(Event::CaptureFound(first.clone()));
+        assert_eq!(state.thumbnail_photo, Some(first));
+        let saved = PathBuf::from("/photos/saved.jpg");
+        state.handle(Event::PhotoSaved(saved.clone()));
+        assert_eq!(state.thumbnail_photo, Some(saved.clone()));
+        assert!(state.thumbnail_just_saved());
+        state.handle(Event::PhotoFailed);
+        state.handle(Event::VideoFailed);
+        assert_eq!(state.thumbnail_photo, Some(saved));
+        assert!(!state.thumbnail_just_saved());
+        state.handle(Event::VideoSaved(PathBuf::from("/videos/new.mp4")));
+        assert_eq!(state.thumbnail_photo, None);
+        state.handle(Event::CaptureFound(PathBuf::from("/videos/latest.mp4")));
+        assert_eq!(state.thumbnail_photo, None);
     }
 
     #[test]

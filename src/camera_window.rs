@@ -5,6 +5,7 @@ mod countdown;
 mod resolution;
 mod settings;
 mod shutter;
+mod thumbnail;
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -72,6 +73,12 @@ impl CameraWindow {
         let (frames_tx, frames_rx) = mpsc::channel(0);
         let mut camera = GstCamera::new(frames_tx, Recorder::new(H264AacMp4, DefaultMicrophone));
         let mut state = AppState::new();
+        if let Some(path) = crate::capture_store::newest_capture(
+            &crate::capture_store::photos_folder(),
+            &crate::capture_store::videos_folder(),
+        ) {
+            state.handle(Event::CaptureFound(path));
+        }
         start_camera(&mut camera, &mut state);
         cx.spawn_in(window, async move |this, cx| {
             show_frames(this, frames_rx, cx).await

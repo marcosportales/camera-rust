@@ -1,7 +1,10 @@
 //! Schedule idle wakeups and connect core visibility to the overlay controls.
 use super::CameraWindow;
-use crate::{app_core::auto_hide::AutoHide, controls_ui};
-use gpui::{Context, IntoElement, Task, Window, div, prelude::*};
+use crate::{
+    app_core::{auto_hide::AutoHide, state::AppState},
+    controls_ui,
+};
+use gpui::{Context, IntoElement, Task, Window, prelude::*};
 use std::time::{Duration, Instant};
 
 /// Monotonic clock, visibility state and the single pending idle wakeup.
@@ -22,18 +25,15 @@ impl ControlsVisibility {
             task: None,
         }
     }
-}
 
-impl CameraWindow {
-    /// Apply mouse or state changes and replace the wakeup only when its deadline changes.
-    pub(super) fn sync_controls(&mut self, movement: bool, cx: &mut Context<Self>) {
-        let controls = &mut self.controls_visibility;
-        let now = controls.origin.elapsed();
-        controls.core.update(now, &self.state, movement);
-        let deadline = controls.core.deadline();
-        if controls.scheduled != deadline {
-            controls.scheduled = deadline;
-            controls.task = deadline.map(|deadline| {
+    /// Apply core visibility and own the task matching its next idle deadline.
+    fn sync(&mut self, state: &AppState, movement: bool, cx: &mut Context<CameraWindow>) {
+        let now = self.origin.elapsed();
+        self.core.update(now, state, movement);
+        let deadline = self.core.deadline();
+        if self.scheduled != deadline {
+            self.scheduled = deadline;
+            self.task = deadline.map(|deadline| {
                 cx.spawn(async move |this, cx| {
                     cx.background_executor()
                         .timer(deadline.saturating_sub(now))
@@ -45,6 +45,13 @@ impl CameraWindow {
                 })
             });
         }
+    }
+}
+
+impl CameraWindow {
+    /// Connect mouse or state changes to the owned visibility clock.
+    pub(super) fn sync_controls(&mut self, movement: bool, cx: &mut Context<Self>) {
+        self.controls_visibility.sync(&self.state, movement, cx);
     }
 
     /// Fade all controls together and shield them from the mouse as soon as hiding begins.
@@ -70,29 +77,19 @@ impl CameraWindow {
             ))
             .child(self.mode_pill(cx))
             .child(self.settings_controls(window, cx));
-        div()
-            .absolute()
-            .size_full()
-            .when(opacity > 0.0, |root| root.child(layer))
-            .when(hidden, |root| {
-                root.child(
-                    div()
-                        .id("wake-controls")
-                        .absolute()
-                        .size_full()
-                        .occlude()
-                        .on_click(cx.listener(|this, _, _, cx| {
-                            this.sync_controls(true, cx);
-                            cx.stop_propagation();
-                            cx.notify();
-                        })),
-                )
-            })
-            .child(controls_ui::movement_observer(cx.listener(
-                |this, _, _, cx| {
-                    this.sync_controls(true, cx);
-                    cx.notify();
-                },
-            )))
+        controls_ui::surface(
+            layer,
+            opacity,
+            hidden,
+            cx.listener(|this, _, _, cx| {
+                this.sync_controls(true, cx);
+                cx.stop_propagation();
+                cx.notify();
+            }),
+            cx.listener(|this, _, _, cx| {
+                this.sync_controls(true, cx);
+                cx.notify();
+            }),
+        )
     }
 }

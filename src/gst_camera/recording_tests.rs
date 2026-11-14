@@ -137,6 +137,11 @@ fn record_video(audio: FakeAudio, duration: Duration) -> (Vec<String>, Duration)
         Some(CaptureOutcome::VideoSaved(path.clone()))
     );
     assert_eq!(path.extension().unwrap(), "mp4");
+    let frame = crate::video_thumbnail::extract(&path).expect("saved MP4 should yield a Thumbnail");
+    assert_eq!(frame.dimensions(), (640, 360));
+    assert!(frame.pixels().any(|pixel| pixel[0] > 100));
+    assert_eq!(state.thumbnail_capture.as_ref(), Some(&path));
+    assert!(state.thumbnail_just_saved());
     inspect_mp4(&path)
 }
 

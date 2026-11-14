@@ -131,8 +131,8 @@ pub struct AppState {
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
     pub last_capture: Option<CaptureOutcome>,
-    /// The newest saved Photo, independent of failed Capture feedback.
-    pub thumbnail_photo: Option<PathBuf>,
+    /// The newest saved Capture, independent of failed Capture feedback.
+    pub thumbnail_capture: Option<PathBuf>,
     pub video: Option<VideoCapture>,
 }
 
@@ -149,15 +149,15 @@ impl AppState {
             resolution: None,
             camera: CameraState::Detecting,
             last_capture: None,
-            thumbnail_photo: None,
+            thumbnail_capture: None,
             video: None,
         }
     }
 
-    /// Whether the current Capture feedback describes the Photo shown in the Thumbnail.
+    /// Whether the current Capture feedback describes the Capture shown in the Thumbnail.
     pub fn thumbnail_just_saved(&self) -> bool {
-        matches!(&self.last_capture, Some(CaptureOutcome::PhotoSaved(path))
-            if self.thumbnail_photo.as_ref() == Some(path))
+        matches!(&self.last_capture, Some(CaptureOutcome::PhotoSaved(path) | CaptureOutcome::VideoSaved(path))
+            if self.thumbnail_capture.as_ref() == Some(path))
     }
 
     /// The Video being recorded, if one is (not while it is saving).
@@ -261,11 +261,10 @@ impl AppState {
             }
             Event::ToggleMirror => self.mirror = !self.mirror,
             Event::CaptureFound(path) => {
-                self.thumbnail_photo =
-                    (path.extension().is_some_and(|ext| ext == "jpg")).then_some(path);
+                self.thumbnail_capture = Some(path);
             }
             Event::PhotoSaved(path) => {
-                self.thumbnail_photo = Some(path.clone());
+                self.thumbnail_capture = Some(path.clone());
                 self.last_capture = Some(CaptureOutcome::PhotoSaved(path));
             }
             Event::PhotoFailed => self.last_capture = Some(CaptureOutcome::PhotoFailed),
@@ -284,7 +283,7 @@ impl AppState {
             }
             Event::RecordingStopped => {}
             Event::VideoSaved(path) => {
-                self.thumbnail_photo = None;
+                self.thumbnail_capture = Some(path.clone());
                 self.finish_video(CaptureOutcome::VideoSaved(path));
             }
             Event::VideoFailed => self.finish_video(CaptureOutcome::VideoFailed),
@@ -461,19 +460,28 @@ mod tests {
         let mut state = AppState::new();
         let first = PathBuf::from("/photos/first.jpg");
         state.handle(Event::CaptureFound(first.clone()));
-        assert_eq!(state.thumbnail_photo, Some(first));
+        assert_eq!(state.thumbnail_capture, Some(first));
         let saved = PathBuf::from("/photos/saved.jpg");
         state.handle(Event::PhotoSaved(saved.clone()));
-        assert_eq!(state.thumbnail_photo, Some(saved.clone()));
+        assert_eq!(state.thumbnail_capture, Some(saved.clone()));
         assert!(state.thumbnail_just_saved());
         state.handle(Event::PhotoFailed);
         state.handle(Event::VideoFailed);
-        assert_eq!(state.thumbnail_photo, Some(saved));
+        assert_eq!(state.thumbnail_capture, Some(saved.clone()));
         assert!(!state.thumbnail_just_saved());
-        state.handle(Event::VideoSaved(PathBuf::from("/videos/new.mp4")));
-        assert_eq!(state.thumbnail_photo, None);
-        state.handle(Event::CaptureFound(PathBuf::from("/videos/latest.mp4")));
-        assert_eq!(state.thumbnail_photo, None);
+        state.handle(Event::RecordingStarted);
+        state.handle(Event::RecordingStopped);
+        assert_eq!(state.thumbnail_capture, Some(saved));
+        let video = PathBuf::from("/videos/new.mp4");
+        state.handle(Event::VideoSaved(video.clone()));
+        assert_eq!(state.thumbnail_capture, Some(video.clone()));
+        assert!(state.thumbnail_just_saved());
+        state.handle(Event::VideoFailed);
+        assert_eq!(state.thumbnail_capture, Some(video));
+        assert!(!state.thumbnail_just_saved());
+        let latest = PathBuf::from("/videos/latest.mp4");
+        state.handle(Event::CaptureFound(latest.clone()));
+        assert_eq!(state.thumbnail_capture, Some(latest));
     }
 
     #[test]

@@ -20,6 +20,7 @@ mod resolution_ui;
 mod thumbnail_ui;
 mod timer_ui;
 mod tooltip_ui;
+mod video_thumbnail;
 mod viewfinder;
 // Verbatim copy of the design tokens page; later tickets consume the constants.
 #[allow(dead_code)]

@@ -12,7 +12,7 @@
 
 - [ ] Mirror button right of the Shutter at 40 px (`space.40`) gap, `size::MIRROR` (48) circle (`radius::FULL`), fill `color::CONTROL_HOVER` when off as in `01-ready-photo.html`, `flip-horizontal` icon (`icon.lg`).
 - [x] Mirror is on at startup; "on" look is `color::CONTROL_ON` fill, never the red accent.
-- [ ] Clicking the button, or pressing M, toggles Mirror and flips the Viewfinder image horizontally. Mirror is a view-only transform.
+- [x] Clicking the button, or pressing M, toggles Mirror and flips the Viewfinder image horizontally. Mirror is a view-only transform.
 - [x] A Photo taken with Mirror on is identical to one taken with Mirror off (test: the saved JPEG bytes equal the unflipped source frame).
 - [x] Mirror state is not saved between runs.
 - [x] Core tests: initial on, toggle by click and by M.
@@ -21,4 +21,4 @@
 
 ## Implementation notes
 
-- **Interactive webcam verification — pending, non-blocking, low urgency.** `ls /dev/video*` returns `No such file or directory`, so a live webcam session cannot be exercised here. The button geometry/colors and shared click/M wiring were verified by source review (`src/mirror_ui.rs:12`, `src/camera_window.rs:113`, `src/main.rs:38`); `cargo test mirror` verifies the shortcut binding, core toggles, restart default, displayed pixel order, immediate frame reversal, and saved JPEG byte equality. `cargo test` passes all 71 tests. What remains is a manual check of the button placement and click/M interaction with a real camera on Wayland.
+- **Button placement verification — pending, non-blocking, low urgency.** `ls /dev/video*` returns `No such file or directory`, so button placement could not be checked with a live webcam here. Geometry/colors were verified by source review (`src/mirror_ui.rs:12`); `cargo test mirror` passes and `cargo test` passes all 71 tests. The user confirmed that clicking the button and pressing M correctly toggle the Viewfinder on 2026-11-14. What remains is a manual check of the button placement with a real camera on Wayland.

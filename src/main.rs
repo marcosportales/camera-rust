@@ -4,6 +4,7 @@ mod app_core;
 mod assets;
 mod camera_window;
 mod capture_store;
+mod countdown_ui;
 mod feedback;
 mod gst_camera;
 mod gst_recording;

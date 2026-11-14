@@ -5,7 +5,9 @@ use gpui::{
     rgba, svg,
 };
 
+use crate::app_core::controls::ControlLock;
 use crate::app_core::state::Timer;
+use crate::locked_controls;
 use crate::overlays::shadow_control;
 use crate::theme::{color, font, radius, size, space};
 
@@ -29,13 +31,13 @@ pub fn dismiss_layer(on_dismiss: impl Fn(&MouseDownEvent, &mut Window, &mut App)
 }
 
 /// The Timer icon alone when Off, or the icon with its selected value in the set look.
-pub fn button(timer: Timer) -> Stateful<Div> {
+pub fn button(timer: Timer, lock: Option<ControlLock>) -> Stateful<Div> {
     let value = match timer {
         Timer::Off => None,
         Timer::ThreeSeconds => Some("3s"),
         Timer::TenSeconds => Some("10s"),
     };
-    div()
+    let button = div()
         .id("timer")
         .occlude()
         .h(px(size::CONTROL))
@@ -48,7 +50,9 @@ pub fn button(timer: Timer) -> Stateful<Div> {
         .justify_center()
         .gap(px(space::S4))
         .rounded(px(radius::MD))
-        .bg(rgba(if value.is_some() {
+        .bg(rgba(if lock.is_some() {
+            color::CONTROL
+        } else if value.is_some() {
             color::CONTROL_ON
         } else {
             color::CONTROL_HOVER
@@ -57,14 +61,21 @@ pub fn button(timer: Timer) -> Stateful<Div> {
         .text_color(rgba(color::TEXT_PRIMARY))
         .text_size(px(font::SMALL))
         .font_weight(FontWeight::SEMIBOLD)
-        .cursor_pointer()
         .child(
             svg()
                 .path("icons/timer.svg")
                 .size(px(size::ICON_LG))
-                .text_color(rgba(color::TEXT_PRIMARY)),
+                .text_color(rgba(if lock.is_some() {
+                    color::TEXT_DISABLED
+                } else {
+                    color::TEXT_PRIMARY
+                })),
         )
-        .children(value)
+        .children(value);
+    match lock {
+        Some(lock) => locked_controls::with_lock_explanation(button, lock),
+        None => button.cursor_pointer(),
+    }
 }
 
 /// The 184 px Timer menu below its button, including its header and shortcut hint.

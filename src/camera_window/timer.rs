@@ -26,17 +26,21 @@ impl CameraWindow {
         if self.timer_menu_fade.animating() {
             window.request_animation_frame();
         }
+        let lock = self.state.control_lock();
         let opacity = self.timer_menu_fade.opacity();
         let control = div()
             .relative()
             .child(
-                timer_ui::button(self.state.timer).on_click(cx.listener(|this, _, _, cx| {
-                    this.timer_event(Event::ToggleTimerMenu, cx);
-                })),
+                timer_ui::button(self.state.timer, lock).when(lock.is_none(), |button| {
+                    button.on_click(cx.listener(|this, _, _, cx| {
+                        this.timer_event(Event::ToggleTimerMenu, cx);
+                    }))
+                }),
             )
-            .when(self.state.timer_menu_open || opacity > 0.0, |control| {
-                control.child(self.timer_menu(opacity, cx))
-            });
+            .when(
+                lock.is_none() && (self.state.timer_menu_open || opacity > 0.0),
+                |control| control.child(self.timer_menu(opacity, cx)),
+            );
         div()
             .absolute()
             .top_0()

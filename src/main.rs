@@ -8,6 +8,7 @@ mod countdown_ui;
 mod feedback;
 mod gst_camera;
 mod gst_recording;
+mod locked_controls;
 mod mode_pill;
 mod overlays;
 mod photo_ui;

@@ -5,7 +5,9 @@ use gpui::{
     prelude::*, px, rgba,
 };
 
+use crate::app_core::controls::ControlLock;
 use crate::app_core::state::Mode;
+use crate::locked_controls;
 use crate::overlays::shadow_control;
 use crate::photo_ui::mix;
 use crate::theme::{color, font, motion, radius, size, space};
@@ -31,6 +33,7 @@ pub fn segment<F>(
     selected: Mode,
     previous: Mode,
     epoch: usize,
+    lock: Option<ControlLock>,
     on_select: F,
 ) -> impl IntoElement
 where
@@ -41,20 +44,7 @@ where
         Mode::Video => ("mode-video", "Video"),
     };
     let active = selected == target;
-    // Fade only when this segment's state changed; otherwise hold the resting fill.
-    let resting = if active {
-        color::SELECTED
-    } else {
-        SEGMENT_CLEAR
-    };
-    let from = if previous == selected {
-        resting
-    } else if active {
-        SEGMENT_CLEAR
-    } else {
-        color::SELECTED
-    };
-    let to = resting;
+    let (from, to) = segment_colors(target, selected, previous, lock.is_some());
     let button: Stateful<Div> = div()
         .id(id)
         .h(px(size::SEGMENT))
@@ -62,9 +52,42 @@ where
         .flex()
         .items_center()
         .rounded(px(radius::FULL))
-        .text_size(px(font::LABEL))
-        .on_click(on_select);
-    let button = if active {
+        .text_size(px(font::LABEL));
+    let button = if let Some(lock) = lock {
+        locked_controls::with_lock_explanation(button, lock)
+    } else {
+        button.on_click(on_select)
+    };
+    let button = segment_appearance(button, active, lock.is_some());
+    button.child(label).with_animation(
+        (id, epoch),
+        Animation::new(motion::MODE_SWITCH),
+        move |segment, progress| segment.bg(mix(from, to, progress)),
+    )
+}
+
+/// Fade only when this segment changed selection; otherwise hold its resting fill.
+fn segment_colors(target: Mode, selected: Mode, previous: Mode, locked: bool) -> (u32, u32) {
+    let fill = |mode| {
+        if mode == target {
+            if locked {
+                // Keep the selection visible without washing out the disabled label.
+                color::CONTROL_ON
+            } else {
+                color::SELECTED
+            }
+        } else {
+            SEGMENT_CLEAR
+        }
+    };
+    (fill(previous), fill(selected))
+}
+
+/// Apply selected or inactive text styling, suppressing hover while locked.
+fn segment_appearance(button: Stateful<Div>, active: bool, locked: bool) -> Stateful<Div> {
+    if locked {
+        button.font_weight(FontWeight::MEDIUM)
+    } else if active {
         button
             .font_weight(FontWeight::SEMIBOLD)
             .text_color(rgba(color::TEXT_ON_SELECTED))
@@ -77,10 +100,5 @@ where
                     .bg(rgba(color::ITEM_HOVER))
                     .text_color(rgba(color::TEXT_PRIMARY))
             })
-    };
-    button.child(label).with_animation(
-        (id, epoch),
-        Animation::new(motion::MODE_SWITCH),
-        move |segment, progress| segment.bg(mix(from, to, progress)),
-    )
+    }
 }

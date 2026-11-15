@@ -2,6 +2,7 @@
 
 mod auto_hide;
 mod countdown;
+mod lifecycle;
 mod resolution;
 mod settings;
 mod shutter;
@@ -83,6 +84,7 @@ impl CameraWindow {
             show_frames(this, frames_rx, cx).await
         })
         .detach();
+        Self::watch_lifecycle(window, cx);
         let focus = cx.focus_handle();
         window.focus(&focus);
         Self {
@@ -219,13 +221,15 @@ impl Render for CameraWindow {
         self.sync_controls(false, cx);
         let root = self.root(cx);
         let CameraState::Ready(camera) = &self.state.camera else {
-            return root.children(crate::error_ui::screen(
-                &self.state,
-                cx.listener(|this, _, _, cx| {
-                    this.state.retry_camera(&mut this.camera);
-                    cx.notify();
-                }),
-            ));
+            return root
+                .children(crate::error_ui::screen(
+                    &self.state,
+                    cx.listener(|this, _, _, cx| {
+                        this.state.retry_camera(&mut this.camera);
+                        cx.notify();
+                    }),
+                ))
+                .children(self.capture_toast());
         };
         let root = root
             .bg(rgba(color::LETTERBOX))
@@ -245,12 +249,7 @@ impl Render for CameraWindow {
                 root.child(recording_ui::timecode_pill(recording))
             }
             Some(VideoCapture::Saving) => root.child(recording_ui::saving_label()),
-            None => root.children(
-                self.feedback
-                    .toast
-                    .zip(self.state.last_capture.as_ref())
-                    .map(|(id, outcome)| photo_ui::toast(id, outcome)),
-            ),
+            None => root.children(self.capture_toast()),
         }
     }
 }

@@ -6,6 +6,7 @@ pub mod controls;
 pub mod countdown;
 #[cfg(test)]
 mod fake;
+pub mod lifecycle;
 pub mod recording;
 pub mod resolution;
 pub mod state;

@@ -122,6 +122,8 @@ impl From<Result<PathBuf, VideoError>> for Event {
 /// Everything the UI shows, changed only through [`AppState::handle`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppState {
+    pub(super) closing: bool,
+    pub(super) pending_camera_error: Option<CameraError>,
     pub countdown: Option<super::countdown::Countdown>,
     pub mode: Mode,
     pub timer: Timer,
@@ -141,6 +143,8 @@ impl AppState {
     /// State at app startup: Photo, Timer off, Mirror on, camera detecting.
     pub fn new() -> Self {
         Self {
+            closing: false,
+            pending_camera_error: None,
             countdown: None,
             mode: Mode::Photo,
             timer: Timer::Off,
@@ -172,7 +176,7 @@ impl AppState {
 
     /// Take a Photo into `folder` unless a Video is recording or saving, and record its outcome.
     pub fn take_photo(&mut self, camera: &mut impl CameraBackend, folder: &Path) {
-        if self.video.is_some() {
+        if self.closing || self.pending_camera_error.is_some() || self.video.is_some() {
             return;
         }
         self.handle(camera.take_photo(folder, self.mirror).into());
@@ -181,7 +185,10 @@ impl AppState {
     /// What the Shutter does: nothing until the camera is ready or while a Video saves, then stop a
     /// recording in progress, else act on the Mode.
     pub fn shutter_action(&self) -> Option<ShutterAction> {
-        if !matches!(self.camera, CameraState::Ready(_)) {
+        if self.closing
+            || self.pending_camera_error.is_some()
+            || !matches!(self.camera, CameraState::Ready(_))
+        {
             return None;
         }
         match (self.video, self.mode) {
@@ -194,7 +201,7 @@ impl AppState {
 
     /// Start a Video into `folder` unless one is recording or saving; report any start failure.
     pub fn start_recording(&mut self, camera: &mut impl CameraBackend, folder: &Path) {
-        if self.video.is_some() {
+        if self.closing || self.pending_camera_error.is_some() || self.video.is_some() {
             return;
         }
         let event = match camera.start_video(folder, self.mirror) {
@@ -297,6 +304,9 @@ impl AppState {
     fn finish_video(&mut self, outcome: CaptureOutcome) {
         self.video = None;
         self.last_capture = Some(outcome);
+        if let Some(error) = self.pending_camera_error.take() {
+            self.handle(Event::CameraFailed(error));
+        }
     }
 }
 

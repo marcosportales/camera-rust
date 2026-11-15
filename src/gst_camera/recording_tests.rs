@@ -228,3 +228,33 @@ fn inspect_mp4(path: &Path) -> (Vec<String>, Duration) {
     result.sort();
     (result, Duration::from_nanos(duration.unwrap().nseconds()))
 }
+
+/// Removing the capture source leaves a playable partial MP4 after the independent writer's EOS.
+#[test]
+fn source_removed_mid_recording_finalizes_playable_mp4() {
+    let mut camera = test_camera(test_recorder());
+    let folder = tempfile::tempdir().unwrap();
+    camera.start_video(folder.path(), false).unwrap();
+    std::thread::sleep(Duration::from_millis(600));
+    let pipeline = camera.pipeline.as_ref().unwrap();
+    let source = pipeline
+        .iterate_sources()
+        .into_iter()
+        .next()
+        .unwrap()
+        .unwrap();
+    source.set_state(gst::State::Null).unwrap();
+    let message = gst::message::Error::builder(gst::ResourceError::NotFound, "Device removed")
+        .src(&source)
+        .build();
+    pipeline.post_message(message).unwrap();
+    assert_eq!(camera.poll_camera_error(), Some(CameraError::NoCamera));
+    let saved = futures::executor::block_on(camera.stop_video())
+        .unwrap()
+        .unwrap();
+    let frame = crate::video_thumbnail::extract(&saved).expect("partial MP4 must decode");
+    assert_eq!(frame.dimensions(), (640, 360));
+    let (streams, duration) = inspect_mp4(&saved);
+    assert!(streams.contains(&"video/x-h264".to_owned()));
+    assert!(duration >= Duration::from_millis(300));
+}

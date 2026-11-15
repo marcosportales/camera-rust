@@ -17,6 +17,14 @@ use crate::theme::space;
 const TICK: Duration = Duration::from_secs(1);
 
 impl CameraWindow {
+    /// Keep Capture outcome feedback visible on both the Viewfinder and camera error screens.
+    pub(super) fn capture_toast(&self) -> Option<impl IntoElement> {
+        self.feedback
+            .toast
+            .zip(self.state.last_capture.as_ref())
+            .map(|(id, outcome)| photo_ui::toast(id, outcome))
+    }
+
     /// Take a Photo, or start or stop a Video, depending on the Mode and whether a Video is recording.
     pub(super) fn press_shutter(&mut self, cx: &mut Context<Self>) {
         match self.state.press_shutter(self.countdown_clock.now()) {
@@ -79,6 +87,15 @@ impl CameraWindow {
     /// Stop the Video and its ticking, then wait in the background until its file is finalized.
     fn stop_recording(&mut self, cx: &mut Context<Self>) {
         let saving = self.state.stop_recording(&mut self.camera);
+        self.await_saving(saving, cx);
+    }
+
+    /// Observe a finalization started by the Shutter, camera loss, or window close.
+    pub(super) fn await_saving(
+        &mut self,
+        saving: Option<crate::app_core::backend::VideoSaving>,
+        cx: &mut Context<Self>,
+    ) {
         self.recording_clock = None;
         if let Some(saving) = saving {
             cx.spawn(async move |this, cx| {
@@ -94,6 +111,10 @@ impl CameraWindow {
     /// The stopped Video is finalized (or failed): toast it; the Shutter returns to its Video Mode look.
     fn finish_saving(&mut self, outcome: Result<PathBuf, VideoError>, cx: &mut Context<Self>) {
         self.state.handle(outcome.into());
+        if self.state.can_exit() {
+            cx.quit();
+            return;
+        }
         self.show_feedback(false, cx);
         cx.notify();
     }

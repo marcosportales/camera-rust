@@ -335,6 +335,7 @@ mod tests {
             CameraError::InUse,
             CameraError::AccessDenied,
             CameraError::NoCamera,
+            CameraError::Other,
         ];
         let states: Vec<_> = kinds
             .iter()
@@ -346,6 +347,7 @@ mod tests {
                 CameraState::Error(CameraError::InUse),
                 CameraState::Error(CameraError::AccessDenied),
                 CameraState::Error(CameraError::NoCamera),
+                CameraState::Error(CameraError::Other),
             ]
         );
     }

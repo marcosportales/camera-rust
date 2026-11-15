@@ -22,6 +22,7 @@ const ICONS: &[(&str, &[u8])] = embed![
     "icons/flip-horizontal.svg",
     "icons/camera.svg",
     "icons/camera-off.svg",
+    "icons/triangle-alert.svg",
     "icons/check.svg",
     "icons/x.svg",
     "icons/rotate-cw.svg",
@@ -69,11 +70,12 @@ impl AssetSource for Assets {
 mod tests {
     use super::*;
 
-    const REQUIRED_ICONS: [&str; 10] = [
+    const REQUIRED_ICONS: [&str; 11] = [
         "timer",
         "flip-horizontal",
         "camera",
         "camera-off",
+        "triangle-alert",
         "check",
         "x",
         "rotate-cw",

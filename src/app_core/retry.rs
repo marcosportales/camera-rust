@@ -39,12 +39,15 @@ mod tests {
         camera.start_results.extend([
             Err(CameraError::InUse),
             Err(CameraError::AccessDenied),
+            Err(CameraError::Other),
             Ok(()),
         ]);
         state.retry_camera(&mut camera);
         assert_eq!(state.camera, CameraState::Error(CameraError::InUse));
         state.retry_camera(&mut camera);
         assert_eq!(state.camera, CameraState::Error(CameraError::AccessDenied));
+        state.retry_camera(&mut camera);
+        assert_eq!(state.camera, CameraState::Error(CameraError::Other));
         state.retry_camera(&mut camera);
         assert!(matches!(state.camera, CameraState::Ready(_)));
         state.retry_camera(&mut FakeCamera::failing(CameraError::NoCamera));

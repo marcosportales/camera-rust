@@ -17,7 +17,6 @@ use gpui::{
     WeakEntity, Window, actions, div, prelude::*, px, rgba,
 };
 
-use crate::app_core::backend::CameraBackend;
 use crate::app_core::state::{AppState, CameraState, Event, Mode, VideoCapture};
 use crate::feedback::{CaptureFeedback, MenuFade, ModeTransition};
 use crate::gst_camera::{Frame, GstCamera};
@@ -79,7 +78,7 @@ impl CameraWindow {
         ) {
             state.handle(Event::CaptureFound(path));
         }
-        start_camera(&mut camera, &mut state);
+        state.retry_camera(&mut camera);
         cx.spawn_in(window, async move |this, cx| {
             show_frames(this, frames_rx, cx).await
         })
@@ -167,17 +166,6 @@ fn after(
     .detach();
 }
 
-/// Detect the camera and start the Viewfinder at the default Resolution, recording the outcome in `state`.
-fn start_camera(camera: &mut impl CameraBackend, state: &mut AppState) {
-    state.handle(camera.detect_cameras().into());
-    let Some(resolution) = state.resolution else {
-        return;
-    };
-    if let Err(error) = camera.start_viewfinder(resolution) {
-        state.handle(Event::CameraFailed(error));
-    }
-}
-
 /// Show each frame the camera sends until the window or the camera goes away.
 async fn show_frames(
     this: WeakEntity<CameraWindow>,
@@ -231,7 +219,13 @@ impl Render for CameraWindow {
         self.sync_controls(false, cx);
         let root = self.root(cx);
         let CameraState::Ready(camera) = &self.state.camera else {
-            return root;
+            return root.children(crate::error_ui::screen(
+                &self.state,
+                cx.listener(|this, _, _, cx| {
+                    this.state.retry_camera(&mut this.camera);
+                    cx.notify();
+                }),
+            ));
         };
         let root = root
             .bg(rgba(color::LETTERBOX))

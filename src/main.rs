@@ -5,6 +5,7 @@ mod camera_window;
 mod capture_store;
 mod controls_ui;
 mod countdown_ui;
+mod error_ui;
 mod feedback;
 mod gst_camera;
 mod gst_recording;

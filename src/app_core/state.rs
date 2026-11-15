@@ -130,6 +130,7 @@ pub struct AppState {
     pub mirror: bool,
     pub resolution: Option<Resolution>,
     pub camera: CameraState,
+    pub last_camera_name: Option<String>,
     pub last_capture: Option<CaptureOutcome>,
     /// The newest saved Capture, independent of failed Capture feedback.
     pub thumbnail_capture: Option<PathBuf>,
@@ -148,6 +149,7 @@ impl AppState {
             mirror: true,
             resolution: None,
             camera: CameraState::Detecting,
+            last_camera_name: None,
             last_capture: None,
             thumbnail_capture: None,
             video: None,
@@ -238,6 +240,7 @@ impl AppState {
             }
             Event::CancelCountdown => self.countdown = None,
             Event::CameraReady(camera) => {
+                self.last_camera_name = Some(camera.name.clone());
                 self.resolution = default_resolution(&camera.resolutions);
                 self.camera = CameraState::Ready(camera);
             }
@@ -332,6 +335,7 @@ mod tests {
             CameraError::InUse,
             CameraError::AccessDenied,
             CameraError::NoCamera,
+            CameraError::Other,
         ];
         let states: Vec<_> = kinds
             .iter()
@@ -343,6 +347,7 @@ mod tests {
                 CameraState::Error(CameraError::InUse),
                 CameraState::Error(CameraError::AccessDenied),
                 CameraState::Error(CameraError::NoCamera),
+                CameraState::Error(CameraError::Other),
             ]
         );
     }

@@ -74,14 +74,17 @@ mod tests {
     /// An interrupted Video shows feedback and its camera error only after EOS completes.
     #[test]
     fn disconnect_waits_for_eos_success_or_failure() {
-        for success in [true, false] {
+        for (success, error) in [
+            (true, CameraError::NoCamera),
+            (false, CameraError::NoCamera),
+            (true, CameraError::Other),
+            (false, CameraError::Other),
+        ] {
             let mut camera = FakeCamera::ready("Camera", vec![]);
             let mut state = AppState::new();
             state.handle(camera.detect_cameras().into());
             state.start_recording(&mut camera, Path::new("/tmp"));
-            let mut saving = state
-                .camera_lost(&mut camera, CameraError::NoCamera)
-                .unwrap();
+            let mut saving = state.camera_lost(&mut camera, error).unwrap();
             assert!(matches!(state.camera, CameraState::Ready(_)));
             assert_eq!(state.last_capture, None);
             assert_eq!(state.shutter_action(), None);
@@ -92,7 +95,7 @@ mod tests {
                 camera.fail_eos();
             }
             state.handle(saving.try_recv().unwrap().unwrap().into());
-            assert_eq!(state.camera, CameraState::Error(CameraError::NoCamera));
+            assert_eq!(state.camera, CameraState::Error(error));
             assert_eq!(
                 matches!(state.last_capture, Some(CaptureOutcome::VideoSaved(_))),
                 success

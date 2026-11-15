@@ -22,6 +22,6 @@ The user approved the same layout for other capture failures, with an appropriat
 
 ## Implementation notes
 
-- **Non-blocking, medium urgency — graphical verification:** The three layouts are implemented in `src/error_ui.rs:10` and checked against `docs/design/Camera-UI/html/06-error-*.html` by code review, but have not been visually verified in a running GPUI window. Check all three error screens and Retry with a real camera. `cargo check --offline`, `cargo clippy --offline --all-targets -- -D warnings`, and `cargo test --offline` passed (93 tests); these do not establish pixel-level layout correctness.
+- **Non-blocking, medium urgency — graphical verification:** The three layouts are implemented in `src/error_ui.rs:10` and checked against `docs/design/Camera-UI/html/06-error-*.html` by code review, but have not been visually verified in a running GPUI window. Check all three error screens and Retry with a real camera. `cargo check --offline`, `cargo clippy --offline --all-targets -- -D warnings`, and `cargo test --offline` passed (94 tests); these do not establish pixel-level layout correctness.
 
 - **Non-blocking, medium urgency — physical classification:** Known resource errors and unknown/missing-plugin errors have automated classifier coverage; real V4L2 busy/permission cases still require a camera.

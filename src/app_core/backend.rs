@@ -20,6 +20,8 @@ pub enum CameraError {
     AccessDenied,
     /// No capture-capable camera was found.
     NoCamera,
+    /// The capture system failed for another reason.
+    Other,
 }
 
 /// The Photo could not be saved.

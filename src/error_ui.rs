@@ -23,6 +23,7 @@ pub fn screen(
         CameraError::InUse => ("Camera is in use", format!("Another app is using {name}. Close it, then try again.")),
         CameraError::AccessDenied => ("Camera access denied", "Camera doesn’t have permission to open the webcam. Check the device permissions, then try again.".into()),
         CameraError::NoCamera => ("No camera found", "Connect a webcam, then try again.".into()),
+        CameraError::Other => ("Unable to start camera", "Something went wrong while opening the camera. Try again. If the problem continues, check that the camera software and required media components are installed.".into()),
     };
     Some(
         div()
@@ -38,7 +39,7 @@ pub fn screen(
                     .justify_center()
                     .gap(px(space::S24))
                     .px(px(space::S24))
-                    .child(error_tile())
+                    .child(error_tile(error))
                     .child(error_text(title, message))
                     .child(retry_button(retry)),
             ),
@@ -67,8 +68,8 @@ fn device_label(name: &str) -> Div {
         .child(name.to_owned())
 }
 
-/// The circular camera-off tile shared by each error screen.
-fn error_tile() -> Div {
+/// Show an alert for general failures and a camera-off icon for known camera errors.
+fn error_tile(error: CameraError) -> Div {
     div()
         .size(px(56.))
         .flex()
@@ -80,7 +81,11 @@ fn error_tile() -> Div {
         .border_color(rgba(color::BORDER_SUBTLE))
         .child(
             svg()
-                .path("icons/camera-off.svg")
+                .path(if error == CameraError::Other {
+                    "icons/triangle-alert.svg"
+                } else {
+                    "icons/camera-off.svg"
+                })
                 .size(px(size::ICON_XL))
                 .text_color(rgba(color::TEXT_SECONDARY)),
         )

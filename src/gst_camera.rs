@@ -100,10 +100,10 @@ impl GstCamera {
 impl CameraBackend for GstCamera {
     /// Find the first capture-capable V4L2 camera and its MJPG Resolutions.
     fn detect_cameras(&mut self) -> Result<Camera, CameraError> {
-        gst::init().map_err(|_| CameraError::NoCamera)?;
+        gst::init().map_err(|_| CameraError::Other)?;
         // The V4L2 provider lists only video-capture nodes, so metadata nodes are already skipped.
-        let provider = gst::DeviceProviderFactory::by_name("v4l2deviceprovider")
-            .ok_or(CameraError::NoCamera)?;
+        let provider =
+            gst::DeviceProviderFactory::by_name("v4l2deviceprovider").ok_or(CameraError::Other)?;
         let (path, device) = provider
             .devices()
             .into_iter()
@@ -119,10 +119,10 @@ impl CameraBackend for GstCamera {
             .map_or_else(Vec::new, |caps| mjpg_resolutions(&caps));
         // Without an MJPG mode the Viewfinder cannot start, so the camera is unusable.
         if resolutions.is_empty() {
-            return Err(CameraError::NoCamera);
+            return Err(CameraError::Other);
         }
         let camera = Camera {
-            name: card_name(&device).ok_or(CameraError::NoCamera)?,
+            name: card_name(&device).ok_or(CameraError::Other)?,
             resolutions,
         };
         self.source = Some(format!("v4l2src device={path}"));
@@ -135,10 +135,10 @@ impl CameraBackend for GstCamera {
         if let Some(previous) = self.pipeline.take() {
             previous
                 .set_state(gst::State::Null)
-                .map_err(|_| CameraError::NoCamera)?;
+                .map_err(|_| CameraError::Other)?;
         }
         lock(&self.jpeg).latest = None;
-        let source = self.source.as_deref().ok_or(CameraError::NoCamera)?;
+        let source = self.source.as_deref().ok_or(CameraError::Other)?;
         let pipeline = viewfinder_pipeline(source, resolution)?;
         send_frames_to(&pipeline, self.frames.clone())?;
         tap_jpeg(&pipeline, Arc::clone(&self.jpeg))?;
@@ -228,11 +228,11 @@ fn viewfinder_pipeline(source: &str, resolution: Resolution) -> Result<gst::Pipe
          ! appsink name=frames max-buffers=1 drop=true sync=false \
          mjpg. ! queue ! appsink name=jpeg max-buffers=1 drop=true sync=false"
     );
-    // A parse failure means a GStreamer plugin is missing: no usable camera.
+    // A parse failure may mean a required media plugin is missing.
     gst::parse::launch(&description)
         .ok()
         .and_then(|element| element.downcast().ok())
-        .ok_or(CameraError::NoCamera)
+        .ok_or(CameraError::Other)
 }
 
 /// Forward every decoded frame from the pipeline's appsink to `frames`.
@@ -240,7 +240,7 @@ fn send_frames_to(pipeline: &gst::Pipeline, mut frames: Sender<Frame>) -> Result
     let sink = pipeline
         .by_name("frames")
         .and_then(|element| element.downcast::<gst_app::AppSink>().ok())
-        .ok_or(CameraError::NoCamera)?;
+        .ok_or(CameraError::Other)?;
     let callbacks = gst_app::AppSinkCallbacks::builder()
         .new_sample(move |sink| {
             let sample = sink.pull_sample().map_err(|_| gst::FlowError::Eos)?;
@@ -260,7 +260,7 @@ fn tap_jpeg(pipeline: &gst::Pipeline, tap: Arc<Mutex<JpegTap>>) -> Result<(), Ca
     let sink = pipeline
         .by_name("jpeg")
         .and_then(|element| element.downcast::<gst_app::AppSink>().ok())
-        .ok_or(CameraError::NoCamera)?;
+        .ok_or(CameraError::Other)?;
     let callbacks = gst_app::AppSinkCallbacks::builder()
         .new_sample(move |sink| {
             let sample = sink.pull_sample().map_err(|_| gst::FlowError::Eos)?;
@@ -287,7 +287,7 @@ fn play(pipeline: &gst::Pipeline) -> Result<(), CameraError> {
     let error = pipeline
         .bus()
         .and_then(|bus| bus.pop_filtered(&[gst::MessageType::Error]))
-        .map_or(CameraError::NoCamera, |message| camera_error(&message));
+        .map_or(CameraError::Other, |message| camera_error(&message));
     let _ = pipeline.set_state(gst::State::Null);
     Err(error)
 }

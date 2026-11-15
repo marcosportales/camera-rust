@@ -16,7 +16,12 @@
 
 **Out of this ticket:** Disconnection during use (20).
 
+## Decision
+
+The user approved the same layout for other capture failures, with an appropriate icon and friendly message. General failures now use an alert triangle, “Unable to start camera”, and guidance to retry or check installed camera/media components.
+
 ## Implementation notes
 
-- **Blocking, high urgency — classification:** The three known GStreamer resource kinds are mapped in `src/gst_camera/errors.rs:5`; existing unclassified failures still fall back to `NoCamera` (`src/gst_camera/errors.rs:16`), and initialization/plugin failures elsewhere in `src/gst_camera.rs` retain the same pre-existing fallback. Asked the user which screen to show for these failures; no answer yet. Finish that mapping and verify real V4L2 busy/permission failures before merging. This PR is a draft.
 - **Non-blocking, medium urgency — graphical verification:** The three layouts are implemented in `src/error_ui.rs:10` and checked against `docs/design/Camera-UI/html/06-error-*.html` by code review, but have not been visually verified in a running GPUI window. Check all three error screens and Retry with a real camera. `cargo check --offline`, `cargo clippy --offline --all-targets -- -D warnings`, and `cargo test --offline` passed (93 tests); these do not establish pixel-level layout correctness.
+
+- **Non-blocking, medium urgency — physical classification:** Known resource errors and unknown/missing-plugin errors have automated classifier coverage; real V4L2 busy/permission cases still require a camera.

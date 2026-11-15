@@ -20,8 +20,3 @@
 - [x] Integration test: with the source removed mid-recording (simulated by stopping the source element), the output MP4 is playable.
 
 **Out of this ticket:** Recovering a recording after the camera comes back.
-
-## Implementation notes
-
-
-- **Non-blocking, medium urgency — physical verification:** Real camera unplug and interactive window-close behavior require manual verification. Core lifecycle tests and stopped-source playable MP4 integration tests cover the automated paths. General errors now use the user-approved alert screen from ticket 19.
